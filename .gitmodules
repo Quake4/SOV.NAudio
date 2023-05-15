@@ -1,0 +1,3 @@
+[submodule "naudio"]
+	path = module/naudio
+	url = ../../naudio/NAudio.git
