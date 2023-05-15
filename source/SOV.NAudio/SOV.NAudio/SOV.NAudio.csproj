@@ -2,11 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\..\..\module\naudio\NAudio.Core\FileFormats\Wav\WaveFileChunkReader.cs" Link="Wave\WaveFileChunkReader.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Core\Utils\BufferHelpers.cs" Link="Util\BufferHelpers.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Utils\ChunkIdentifier.cs" Link="Util\ChunkIdentifier.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Core\Utils\FieldDescriptionAttribute.cs" Link="Util\FieldDescriptionAttribute.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Core\Utils\FieldDescriptionHelper.cs" Link="Util\FieldDescriptionHelper.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Core\Utils\HResult.cs" Link="Util\HResult.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Utils\IEEE.cs" Link="Util\IEEE.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveFormats\AdpcmWaveFormat.cs" Link="Wave\Fromat\AdpcmWaveFormat.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveFormats\AudioMediaSubtypes.cs" Link="Wave\Fromat\AudioMediaSubtypes.cs" />
@@ -15,15 +20,104 @@
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveFormats\WaveFormatEncoding.cs" Link="Wave\Fromat\WaveFormatEncoding.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveFormats\WaveFormatExtensible.cs" Link="Wave\Fromat\WaveFormatExtensible.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveFormats\WaveFormatExtraData.cs" Link="Wave\Fromat\WaveFormatExtraData.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveOutputs\IWavePlayer.cs" Link="Wave\IWavePlayer.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveOutputs\IWaveProvider.cs" Link="Wave\IWaveProvider.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveOutputs\PlaybackState.cs" Link="Wave\PlaybackState.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveOutputs\StoppedEventArgs.cs" Link="Wave\StoppedEventArgs.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveStreams\AiffFileReader.cs" Link="Wave\Stream\AiffFileReader.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveStreams\RiffChunk.cs" Link="Wave\Stream\RiffChunk.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveStreams\WaveFileReader.cs" Link="Wave\Stream\WaveFileReader.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveStreams\WaveStream.cs" Link="Wave\Stream\WaveStream.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\ActivateAudioInterfaceCompletionHandler.cs" Link="Wasapi\Core\ActivateAudioInterfaceCompletionHandler.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\AudioClientBufferFlags.cs" Link="Wasapi\Core\AudioClientBufferFlags.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\AudioClientProperties.cs" Link="Wasapi\Core\AudioClientProperties.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\AudioClientShareMode.cs" Link="Wasapi\Core\AudioClientShareMode.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\AudioClientStreamFlags.cs" Link="Wasapi\Core\AudioClientStreamFlags.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\AudioClientStreamOptions.cs" Link="Wasapi\Core\AudioClientStreamOptions.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\AudioClockClient.cs" Link="Wasapi\Core\AudioClockClient.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\AudioRenderClient.cs" Link="Wasapi\Core\AudioRenderClient.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\AudioStreamCategory.cs" Link="Wasapi\Core\AudioStreamCategory.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\DataFlow.cs" Link="Wasapi\Core\DataFlow.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\DeviceState.cs" Link="Wasapi\Core\DeviceState.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\Blob.cs" Link="Wasapi\Core\Interfaces\Blob.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\ClsCtx.cs" Link="Wasapi\Core\Interfaces\ClsCtx.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\ErrorCodes.cs" Link="Wasapi\Core\Interfaces\ErrorCodes.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IActivateAudioInterfaceAsyncOperation.cs" Link="Wasapi\Core\Interfaces\IActivateAudioInterfaceAsyncOperation.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IActivateAudioInterfaceCompletionHandler.cs" Link="Wasapi\Core\Interfaces\IActivateAudioInterfaceCompletionHandler.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IAgileObject.cs" Link="Wasapi\Core\Interfaces\IAgileObject.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IAudioClient.cs" Link="Wasapi\Core\Interfaces\IAudioClient.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IAudioClient2.cs" Link="Wasapi\Core\Interfaces\IAudioClient2.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IAudioClock2.cs" Link="Wasapi\Core\Interfaces\IAudioClock2.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IAudioRenderClient.cs" Link="Wasapi\Core\Interfaces\IAudioRenderClient.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IMMDevice.cs" Link="Wasapi\Core\Interfaces\IMMDevice.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IMMDeviceCollection.cs" Link="Wasapi\Core\Interfaces\IMMDeviceCollection.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IMMDeviceEnumerator.cs" Link="Wasapi\Core\Interfaces\IMMDeviceEnumerator.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IMMEndpoint.cs" Link="Wasapi\Core\Interfaces\IMMEndpoint.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IMMNotificationClient.cs" Link="Wasapi\Core\Interfaces\IMMNotificationClient.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IPropertyStore.cs" Link="Wasapi\Core\Interfaces\IPropertyStore.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\MMDeviceEnumeratorComObject.cs" Link="Wasapi\Core\Interfaces\MMDeviceEnumeratorComObject.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\StorageAccessMode.cs" Link="Wasapi\Core\Interfaces\StorageAccessMode.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\MMDeviceCollection.cs" Link="Wasapi\Core\MMDeviceCollection.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\MMDeviceEnumerator.cs" Link="Wasapi\Core\MMDeviceEnumerator.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\NativeMethods.cs" Link="Wasapi\Core\NativeMethods.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\PropertyKey.cs" Link="Wasapi\Core\PropertyKey.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\PropertyKeys.cs" Link="Wasapi\Core\PropertyKeys.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\PropertyStore.cs" Link="Wasapi\Core\PropertyStore.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\PropertyStoreProperty.cs" Link="Wasapi\Core\PropertyStoreProperty.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\PropVariant.cs" Link="Wasapi\Core\PropVariant.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\PropVariantNative.cs" Link="Wasapi\Core\PropVariantNative.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Role.cs" Link="Wasapi\Core\Role.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoEnumFlags.cs" Link="Wasapi\DMO\DmoEnumFlags.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoGuids.cs" Link="Wasapi\DMO\DmoGuids.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoHResults.cs" Link="Wasapi\DMO\DmoHResults.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoInputDataBufferFlags.cs" Link="Wasapi\DMO\DmoInputDataBufferFlags.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoInputStatusFlags.cs" Link="Wasapi\DMO\DmoInputStatusFlags.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoInterop.cs" Link="Wasapi\DMO\DmoInterop.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoMediaType.cs" Link="Wasapi\DMO\DmoMediaType.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoOutputDataBuffer.cs" Link="Wasapi\DMO\DmoOutputDataBuffer.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoOutputDataBufferFlags.cs" Link="Wasapi\DMO\DmoOutputDataBufferFlags.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoPartialMediaType.cs" Link="Wasapi\DMO\DmoPartialMediaType.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoProcessOutputFlags.cs" Link="Wasapi\DMO\DmoProcessOutputFlags.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoSetTypeFlags.cs" Link="Wasapi\DMO\DmoSetTypeFlags.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\IEnumDmo.cs" Link="Wasapi\DMO\IEnumDmo.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\IMediaBuffer.cs" Link="Wasapi\DMO\IMediaBuffer.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\IMediaObject.cs" Link="Wasapi\DMO\IMediaObject.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\InputStreamInfoFlags.cs" Link="Wasapi\DMO\InputStreamInfoFlags.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\IWMResamplerProps.cs" Link="Wasapi\DMO\IWMResamplerProps.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\MediaBuffer.cs" Link="Wasapi\DMO\MediaBuffer.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\MediaObject.cs" Link="Wasapi\DMO\MediaObject.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\MediaObjectSizeInfo.cs" Link="Wasapi\DMO\MediaObjectSizeInfo.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\MediaTypes.cs" Link="Wasapi\DMO\MediaTypes.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\OutputStreamInfoFlags.cs" Link="Wasapi\DMO\OutputStreamInfoFlags.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\ResamplerMediaObject.cs" Link="Wasapi\DMO\ResamplerMediaObject.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundationReader.cs" Link="Wasapi\MediaFoundationReader.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\AudioSubtypes.cs" Link="Wasapi\MF\AudioSubtypes.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFActivate.cs" Link="Wasapi\MF\IMFActivate.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFAttributes.cs" Link="Wasapi\MF\IMFAttributes.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFByteStream.cs" Link="Wasapi\MF\IMFByteStream.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFCollection.cs" Link="Wasapi\MF\IMFCollection.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFMediaBuffer.cs" Link="Wasapi\MF\IMFMediaBuffer.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFMediaType.cs" Link="Wasapi\MF\IMFMediaType.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFSample.cs" Link="Wasapi\MF\IMFSample.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFSinkWriter.cs" Link="Wasapi\MF\IMFSinkWriter.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFSourceReader.cs" Link="Wasapi\MF\IMFSourceReader.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaFoundationAttributes.cs" Link="Wasapi\MF\MediaFoundationAttributes.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaFoundationErrors.cs" Link="Wasapi\MF\MediaFoundationErrors.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaFoundationHelpers.cs" Link="Wasapi\MF\MediaFoundationHelpers.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaFoundationInterop.cs" Link="Wasapi\MF\MediaFoundationInterop.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaType.cs" Link="Wasapi\MF\MediaType.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaTypes.cs" Link="Wasapi\MF\MediaTypes.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MFT_REGISTER_TYPE_INFO.cs" Link="Wasapi\MF\MFT_REGISTER_TYPE_INFO.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MF_SINK_WRITER_STATISTICS.cs" Link="Wasapi\MF\MF_SINK_WRITER_STATISTICS.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\_MFT_ENUM_FLAG.cs" Link="Wasapi\MF\_MFT_ENUM_FLAG.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\ResamplerDmoStream.cs" Link="Wasapi\ResamplerDmoStream.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Util\" />
+    <Folder Include="Wasapi\Core\Interfaces\" />
+    <Folder Include="Wasapi\MF\" />
+    <Folder Include="Wasapi\DMO\" />
     <Folder Include="Wave\Fromat\" />
   </ItemGroup>
 
