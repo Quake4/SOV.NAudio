@@ -439,23 +439,6 @@ namespace NAudio.Wave
         /// </summary>
         public int InputChannelOffset { get; set; }
 
-        /// <summary>
-        /// Sets the volume (1.0 is unity gain)
-        /// Not supported for ASIO Out. Set the volume on the input stream instead
-        /// </summary>
-        [Obsolete("this function will be removed in a future NAudio as ASIO does not support setting the volume on the device")]
-        public float Volume
-        {
-            get
-            {
-				throw new InvalidOperationException("AsioOut does not support setting the device volume");
-			}
-			set
-            {
-                throw new InvalidOperationException("AsioOut does not support setting the device volume");
-            }
-        }
-
         /// <inheritdoc/>
         public WaveFormat OutputWaveFormat { get; private set; }
 

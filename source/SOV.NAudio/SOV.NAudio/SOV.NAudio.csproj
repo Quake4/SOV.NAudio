@@ -7,10 +7,14 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebugType>portable</DebugType>
+    <NoWarn />
+    <WarningsAsErrors>$(WarningsAsErrors)</WarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DebugType>none</DebugType>
+    <NoWarn />
+    <WarningsAsErrors>$(WarningsAsErrors)</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,7 +44,6 @@
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveFormats\WaveFormatEncoding.cs" Link="Wave\Fromat\WaveFormatEncoding.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveFormats\WaveFormatExtensible.cs" Link="Wave\Fromat\WaveFormatExtensible.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveFormats\WaveFormatExtraData.cs" Link="Wave\Fromat\WaveFormatExtraData.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveOutputs\IWavePlayer.cs" Link="Wave\IWavePlayer.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveOutputs\IWaveProvider.cs" Link="Wave\IWaveProvider.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveOutputs\PlaybackState.cs" Link="Wave\PlaybackState.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Wave\WaveOutputs\StoppedEventArgs.cs" Link="Wave\StoppedEventArgs.cs" />

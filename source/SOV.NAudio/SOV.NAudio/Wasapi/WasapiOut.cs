@@ -323,9 +323,9 @@ namespace NAudio.Wave
             {
                 if (playbackState == PlaybackState.Stopped)
                 {
-                    playThread = new Thread(PlayThread)
-                    {
-                        IsBackground = true,
+					playThread = new Thread(PlayThread)
+					{
+						Priority = ThreadPriority.AboveNormal
                     };
                     playbackState = PlaybackState.Playing;
                     playThread.Start();                    
@@ -486,46 +486,6 @@ namespace NAudio.Wave
             get { return playbackState; }
         }
 
-        /// <summary>
-        /// Volume
-        /// </summary>
-        public float Volume
-        {
-            get
-            {
-				throw new InvalidOperationException("Volume is not supported.");
-				//return mmDevice.AudioEndpointVolume.MasterVolumeLevelScalar;                                
-            }
-            set
-            {
-				throw new InvalidOperationException("Volume is not supported.");
-				/*if (value < 0) throw new ArgumentOutOfRangeException("value", "Volume must be between 0.0 and 1.0");
-                if (value > 1) throw new ArgumentOutOfRangeException("value", "Volume must be between 0.0 and 1.0");
-                mmDevice.AudioEndpointVolume.MasterVolumeLevelScalar = value;*/
-            }
-        }
-		/*
-        /// <summary>
-        /// Retrieve the AudioStreamVolume object for this audio stream
-        /// </summary>
-        /// <remarks>
-        /// This returns the AudioStreamVolume object ONLY for shared audio streams.
-        /// </remarks>
-        /// <exception cref="InvalidOperationException">
-        /// This is thrown when an exclusive audio stream is being used.
-        /// </exception>
-        public AudioStreamVolume AudioStreamVolume
-        {
-            get 
-            {
-                if (shareMode == AudioClientShareMode.Exclusive)
-                {
-                    throw new InvalidOperationException("AudioStreamVolume is ONLY supported for shared audio streams.");
-                }
-                return audioClient.AudioStreamVolume;  
-            }
-        }
-		*/
 #endregion
 
 #region IDisposable Members
@@ -541,7 +501,8 @@ namespace NAudio.Wave
 
                 audioClient.Dispose();
                 audioClient = null;
-                renderClient = null;
+				renderClient.Dispose();
+				renderClient = null;
             }
         }
 
