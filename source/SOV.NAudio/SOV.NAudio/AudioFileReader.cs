@@ -3,15 +3,6 @@ using System;
 
 namespace SOV.NAudio
 {
-	/// <summary>
-	/// AudioFileReader simplifies opening an audio file in NAudio
-	/// Simply pass in the filename, and it will attempt to open the
-	/// file and set up a conversion path that turns into PCM IEEE float.
-	/// ACM codecs will be used for conversion.
-	/// It provides a volume property and implements both WaveStream and
-	/// ISampleProvider, making it possibly the only stage in your audio
-	/// pipeline necessary for simple playback scenarios
-	/// </summary>
 	public class AudioFileReader : WaveStream
 	{
 		protected WaveStream readerStream; // the waveStream which we will use for all positioning
@@ -49,14 +40,9 @@ namespace SOV.NAudio
 				// fall back to media foundation reader, see if that can play it
 				readerStream = new MediaFoundationReader(fileName);
 		}
-		/// <summary>
-		/// File Name
-		/// </summary>
+
 		public string FileName { get; }
 
-		/// <summary>
-		/// WaveFormat of this stream
-		/// </summary>
 		public override WaveFormat WaveFormat => readerStream.WaveFormat;
 
 		public override long Length => readerStream.Length;
