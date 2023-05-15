@@ -6,6 +6,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\..\module\naudio\NAudio.Asio\Asio64Bit.cs" Link="Asio\Asio64Bit.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Asio\AsioAudioAvailableEventArgs.cs" Link="Asio\AsioAudioAvailableEventArgs.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Asio\AsioCallbacks.cs" Link="Asio\AsioCallbacks.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Asio\AsioChannelInfo.cs" Link="Asio\AsioChannelInfo.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Asio\ASIODriver.cs" Link="Asio\ASIODriver.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Asio\AsioDriverCapability.cs" Link="Asio\AsioDriverCapability.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Asio\ASIODriverExt.cs" Link="Asio\ASIODriverExt.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Asio\AsioError.cs" Link="Asio\AsioError.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Asio\AsioMessageSelector.cs" Link="Asio\AsioMessageSelector.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Asio\ASIOSampleConvertor.cs" Link="Asio\ASIOSampleConvertor.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Asio\AsioSampleType.cs" Link="Asio\AsioSampleType.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Asio\ASIOStructures.cs" Link="Asio\ASIOStructures.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\FileFormats\Wav\WaveFileChunkReader.cs" Link="Wave\WaveFileChunkReader.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Utils\BufferHelpers.cs" Link="Util\BufferHelpers.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Core\Utils\ChunkIdentifier.cs" Link="Util\ChunkIdentifier.cs" />
@@ -119,6 +131,10 @@
     <Folder Include="Wasapi\MF\" />
     <Folder Include="Wasapi\DMO\" />
     <Folder Include="Wave\Fromat\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Win32.Registry" Version="4.4.0" />
   </ItemGroup>
 
 </Project>
