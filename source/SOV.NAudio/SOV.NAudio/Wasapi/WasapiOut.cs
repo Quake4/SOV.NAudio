@@ -501,8 +501,11 @@ namespace NAudio.Wave
 
                 audioClient.Dispose();
                 audioClient = null;
-				renderClient.Dispose();
-				renderClient = null;
+				if (renderClient != null)
+				{
+					renderClient.Dispose();
+					renderClient = null;
+				}
             }
         }
 
