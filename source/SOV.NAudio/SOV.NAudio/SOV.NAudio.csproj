@@ -5,6 +5,14 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="..\..\..\module\naudio\NAudio.Asio\Asio64Bit.cs" Link="Asio\Asio64Bit.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Asio\AsioAudioAvailableEventArgs.cs" Link="Asio\AsioAudioAvailableEventArgs.cs" />
