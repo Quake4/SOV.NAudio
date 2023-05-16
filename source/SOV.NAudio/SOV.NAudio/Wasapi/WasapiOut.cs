@@ -28,7 +28,7 @@ namespace NAudio.Wave
         private volatile PlaybackState playbackState;
         private Thread playThread;
         private readonly SynchronizationContext syncContext;
-        private bool dmoResamplerNeeded;
+        protected bool dmoResamplerNeeded;
         
         /// <summary>
         /// Playback Stopped
@@ -385,7 +385,6 @@ namespace NAudio.Wave
                     // The MixFormat is more likely to be a WaveFormatExtensible.
                     if (closestSampleRateFormat == null)
                     {
-
                         OutputWaveFormat = GetFallbackFormat();
                     }
                     else

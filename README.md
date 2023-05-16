@@ -4,3 +4,7 @@ Port of open source [NAudio library for .NET](https://github.com/naudio/NAudio) 
 Only play features by ASIO, WASAPI, MMDevice, Media Foundation
 
 https://learn.microsoft.com/en-us/windows/win32/coreaudio/about-the-windows-core-audio-apis
+
+Flac decoder
+
+https://github.com/stijnvdb88/NAudio.Flac

@@ -5,34 +5,23 @@ namespace SOV.NAudio
 {
 	public class AudioFileReader : WaveStream
 	{
-		protected WaveStream readerStream; // the waveStream which we will use for all positioning
+		protected WaveStream readerStream;
 
-		/// <summary>
-		/// Initializes a new instance of AudioFileReader
-		/// </summary>
-		/// <param name="fileName">The file to open</param>
 		public AudioFileReader(string fileName)
 		{
 			FileName = fileName;
 			CreateReaderStream(fileName);
 		}
 
-		/// <summary>
-		/// Creates the reader stream, supporting all filetypes in the core NAudio library,
-		/// and ensuring we are in PCM format
-		/// </summary>
-		/// <param name="fileName">File Name</param>
 		protected void CreateReaderStream(string fileName)
 		{
-			if (fileName.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
+			if (fileName.EndsWith(".flac", StringComparison.OrdinalIgnoreCase))
+				readerStream = new FlacFileReader(fileName);
+			else if (fileName.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
 			{
 				readerStream = new WaveFileReader(fileName);
 				if (readerStream.WaveFormat.Encoding != WaveFormatEncoding.Pcm && readerStream.WaveFormat.Encoding != WaveFormatEncoding.IeeeFloat)
-				{
 					throw new Exception($"File not supported {fileName} in encoding {readerStream.WaveFormat.Encoding}");
-					//readerStream = WaveFormatConversionStream.CreatePcmStream(readerStream);
-					//readerStream = new BlockAlignReductionStream(readerStream);
-				}
 			}
 			else if (fileName.EndsWith(".aiff", StringComparison.OrdinalIgnoreCase) || fileName.EndsWith(".aif", StringComparison.OrdinalIgnoreCase))
 				readerStream = new AiffFileReader(fileName);
@@ -54,10 +43,6 @@ namespace SOV.NAudio
 			return readerStream.Read(buffer, offset, count);
 		}
 
-		/// <summary>
-		/// Disposes this AudioFileReader
-		/// </summary>
-		/// <param name="disposing">True if called from Dispose</param>
 		protected override void Dispose(bool disposing)
 		{
 			if (disposing && readerStream != null)

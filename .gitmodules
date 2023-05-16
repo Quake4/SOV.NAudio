@@ -1,3 +1,6 @@
 [submodule "naudio"]
 	path = module/naudio
 	url = ../../naudio/NAudio.git
+[submodule "naudio-flac"]
+	path = module/naudio-flac
+	url = ../../stijnvdb88/NAudio.Flac.git
