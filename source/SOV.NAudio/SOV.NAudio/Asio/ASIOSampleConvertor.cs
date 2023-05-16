@@ -21,7 +21,7 @@ namespace NAudio.Wave.Asio
             SampleConvertor convertor = null;
             bool is2Channels = waveFormat.Channels == 2;
 
-			var exception = $"Not supported conversion {asioType} to {waveFormat}";
+            var exception = $"Not a supported conversion {asioType} for {waveFormat}.";
 
             // TODO : IMPLEMENTS OTHER CONVERTOR TYPES
             switch (asioType)
@@ -32,9 +32,9 @@ namespace NAudio.Wave.Asio
                         case 16:
                             convertor = (is2Channels) ? (SampleConvertor)ConvertorShortToInt2Channels : (SampleConvertor)ConvertorShortToIntGeneric;
                             break;
-						case 24:
-							convertor = (is2Channels) ? (SampleConvertor)Convertor24ToInt2Channels : throw new ArgumentException(exception);
-							break;
+                        case 24:
+                            convertor = (is2Channels) ? (SampleConvertor)Convertor24ToInt2Channels : throw new ArgumentException(exception);
+                            break;
                         case 32:
                             if (waveFormat.Encoding == WaveFormatEncoding.IeeeFloat)
                                 convertor = (is2Channels) ? (SampleConvertor)ConvertorFloatToInt2Channels : (SampleConvertor)ConvertorFloatToIntGeneric;
@@ -90,42 +90,42 @@ namespace NAudio.Wave.Asio
                                       Enum.GetName(typeof(AsioSampleType), asioType)));
             }
 
-			if (convertor is null)
-				throw new ArgumentException($"Converter {asioType} not found for {waveFormat}.");
+            if (convertor is null)
+                throw new ArgumentException($"Converter {asioType} not found for {waveFormat}.");
 
             return convertor;
         }
 
-		public static void Convertor24ToInt2Channels(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
-		{
-			unsafe
-			{
-				byte* inputSamples = (byte*)inputInterleavedBuffer;
-				byte* leftSamples = (byte*)asioOutputBuffers[0];
-				byte* rightSamples = (byte*)asioOutputBuffers[1];
+        public static void Convertor24ToInt2Channels(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
+        {
+            unsafe
+            {
+                byte* inputSamples = (byte*)inputInterleavedBuffer;
+                byte* leftSamples = (byte*)asioOutputBuffers[0];
+                byte* rightSamples = (byte*)asioOutputBuffers[1];
 
-				for (int i = 0; i < nbSamples; i++)
-				{
-					leftSamples++;
-					*leftSamples++ = inputSamples[0];
-					*leftSamples++ = inputSamples[1];
-					*leftSamples++ = inputSamples[2];
+                for (int i = 0; i < nbSamples; i++)
+                {
+                    leftSamples++;
+                    *leftSamples++ = inputSamples[0];
+                    *leftSamples++ = inputSamples[1];
+                    *leftSamples++ = inputSamples[2];
 
-					rightSamples++;
-					*rightSamples++ = inputSamples[3];
-					*rightSamples++ = inputSamples[4];
-					*rightSamples++ = inputSamples[5];
+                    rightSamples++;
+                    *rightSamples++ = inputSamples[3];
+                    *rightSamples++ = inputSamples[4];
+                    *rightSamples++ = inputSamples[5];
 
-					// Go to next sample
-					inputSamples += 6;
-				}
-			}
-		}
+                    // Go to next sample
+                    inputSamples += 6;
+                }
+            }
+        }
 
-		/// <summary>
-		/// Optimized convertor for 2 channels SHORT
-		/// </summary>
-		public static void ConvertorShortToInt2Channels(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
+        /// <summary>
+        /// Optimized convertor for 2 channels SHORT
+        /// </summary>
+        public static void ConvertorShortToInt2Channels(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
         {
             unsafe
             {
@@ -137,9 +137,9 @@ namespace NAudio.Wave.Asio
                 // Point to upper 16 bits of the 32Bits.
                 for (int i = 0; i < nbSamples; i++)
                 {
-					leftSamples++;
-					rightSamples++;
-					*leftSamples++ = inputSamples[0];
+                    leftSamples++;
+                    rightSamples++;
+                    *leftSamples++ = inputSamples[0];
                     *rightSamples++ = inputSamples[1];
                     // Go to next sample
                     inputSamples += 2;
