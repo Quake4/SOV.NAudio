@@ -14,9 +14,9 @@ namespace NAudio.Wave
     /// </summary>
     public class WasapiOut : IWavePlayer, IWavePosition
     {
-        private AudioClient audioClient;
+        protected AudioClient audioClient;
         private readonly MMDevice mmDevice;
-        private readonly AudioClientShareMode shareMode;
+        protected readonly AudioClientShareMode shareMode;
         private AudioRenderClient renderClient;
         private IWaveProvider sourceProvider;
         private int latencyMilliseconds;
@@ -325,7 +325,7 @@ namespace NAudio.Wave
                 {
 					playThread = new Thread(PlayThread)
 					{
-						Priority = ThreadPriority.AboveNormal
+						Priority = ThreadPriority.Highest
                     };
                     playbackState = PlaybackState.Playing;
                     playThread.Start();                    

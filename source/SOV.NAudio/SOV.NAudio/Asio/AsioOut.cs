@@ -209,7 +209,7 @@ namespace NAudio.Wave
         {
             playbackState = PlaybackState.Stopped;
             driver.Stop();
-            HasReachedEnd = false;
+            //HasReachedEnd = false;
             RaisePlaybackStopped(null);
         }
 
@@ -345,9 +345,9 @@ namespace NAudio.Wave
 
                 if (read == 0)
                 {
-                    if (AutoStop)
+					HasReachedEnd = true;
+					if (AutoStop)
                         Stop(); // this can cause hanging issues
-                    HasReachedEnd = true;
                 }
             }
         }
