@@ -244,8 +244,7 @@ namespace NAudio.CoreAudioApi
         /// <param name="shareMode">The share mode.</param>
         /// <param name="desiredFormat">The desired format.</param>
         /// <returns>True if the format is supported</returns>
-        public bool IsFormatSupported(AudioClientShareMode shareMode,
-            WaveFormat desiredFormat)
+        public bool IsFormatSupported(AudioClientShareMode shareMode, WaveFormatExtensible desiredFormat)
         {
             return IsFormatSupported(shareMode, desiredFormat, out _);
         }
@@ -262,7 +261,7 @@ namespace NAudio.CoreAudioApi
         /// <param name="desiredFormat">Desired Format</param>
         /// <param name="closestMatchFormat">Output The closest match format.</param>
         /// <returns>True if the format is supported</returns>
-        public bool IsFormatSupported(AudioClientShareMode shareMode, WaveFormat desiredFormat, out WaveFormatExtensible closestMatchFormat)
+        public bool IsFormatSupported(AudioClientShareMode shareMode, WaveFormatExtensible desiredFormat, out WaveFormatExtensible closestMatchFormat)
         {
             IntPtr pointerToPtr = GetPointerToPointer(); // IntPtr.Zero; // Marshal.AllocHGlobal(Marshal.SizeOf<WaveFormatExtensible>());
             closestMatchFormat = null;

@@ -377,7 +377,8 @@ namespace NAudio.Wave
             if (shareMode == AudioClientShareMode.Exclusive)
             {
                 flags = AudioClientStreamFlags.None;
-                if (!audioClient.IsFormatSupported(shareMode, OutputWaveFormat, out WaveFormatExtensible closestSampleRateFormat))
+				var format = new WaveFormatExtensible(OutputWaveFormat.SampleRate, OutputWaveFormat.BitsPerSample, OutputWaveFormat.Channels);
+				if (!audioClient.IsFormatSupported(shareMode, format, out WaveFormatExtensible closestSampleRateFormat))
                 {
                     // Use closesSampleRateFormat (in sharedMode, it equals usualy to the audioClient.MixFormat)
                     // See documentation : http://msdn.microsoft.com/en-us/library/ms678737(VS.85).aspx 
