@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <Copyright>© 2023 Oleg Samsonov, Mark Heath</Copyright>
     <RepositoryUrl>https://github.com/Quake4/SOV.NAudio</RepositoryUrl>
@@ -176,8 +176,10 @@
     <Folder Include="Wave\Fromat\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Win32.Registry" Version="4.4.0" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.Win32.Registry">
+      <Version>4.4.0</Version>
+    </PackageReference>
   </ItemGroup>
 
 </Project>
