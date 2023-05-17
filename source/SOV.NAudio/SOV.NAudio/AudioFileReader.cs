@@ -5,6 +5,8 @@ namespace SOV.NAudio
 {
 	public class AudioFileReader : WaveStream
 	{
+		public static string[] Files = new string[] { ".flac", ".mp3", ".m4a", ".mp4", ".aiff", ".aif", ".wav" };
+
 		protected WaveStream readerStream;
 
 		public AudioFileReader(string fileName)
