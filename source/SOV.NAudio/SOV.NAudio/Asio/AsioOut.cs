@@ -20,6 +20,7 @@ namespace NAudio.Wave
     {
         private AsioDriverExt driver;
         private IWaveProvider sourceStream;
+		private WaveFormat sourceWaveFormat;
         private PlaybackState playbackState;
         private int nbSamples;
         private byte[] waveBuffer;
@@ -239,18 +240,19 @@ namespace NAudio.Wave
         /// <param name="recordOnlySampleRate">Specify sample rate here if only recording, ignored otherwise</param>
         public void InitRecordAndPlayback(IWaveProvider waveProvider, int recordChannels, int recordOnlySampleRate)
         {
-            if (isInitialized)
-            {
-                throw new InvalidOperationException("Already initialised this instance of AsioOut - dispose and create a new one");
-            }
-            isInitialized = true;
+			if (waveProvider != null && isInitialized && waveProvider.WaveFormat.ToString() == sourceWaveFormat.ToString()) {
+				sourceStream = waveProvider;
+				return;
+			}
+
             int desiredSampleRate = waveProvider != null ? waveProvider.WaveFormat.SampleRate : recordOnlySampleRate;
 
             if (waveProvider != null)
             {
                 sourceStream = waveProvider;
+				sourceWaveFormat = waveProvider.WaveFormat;
 
-                this.NumberOfOutputChannels = waveProvider.WaveFormat.Channels;
+				this.NumberOfOutputChannels = waveProvider.WaveFormat.Channels;
 
                 // Select the correct sample convertor from WaveFormat -> ASIOFormat
                 var asioSampleType = driver.Capabilities.OutputChannelInfos[0].type;
@@ -275,33 +277,30 @@ namespace NAudio.Wave
                 }
             }
             else
-            {
                 this.NumberOfOutputChannels = 0;
-            }
-
 
             if (!driver.IsSampleRateSupported(desiredSampleRate))
-            {
                 throw new ArgumentException("SampleRate is not supported");
-            }
+
             if (driver.Capabilities.SampleRate != desiredSampleRate)
-            {
                 driver.SetSampleRate(desiredSampleRate);
-            }
 
-            // Plug the callback
-            driver.FillBufferCallback = driver_BufferUpdate;
+			if (!isInitialized)
+			{
+				// Plug the callback
+				driver.FillBufferCallback = driver_BufferUpdate;
+				NumberOfInputChannels = recordChannels;
 
-            this.NumberOfInputChannels = recordChannels;
-            // Used Prefered size of ASIO Buffer
-            nbSamples = driver.CreateBuffers(NumberOfOutputChannels, NumberOfInputChannels, false);
-            driver.SetChannelOffset(ChannelOffset, InputChannelOffset); // will throw an exception if channel offset is too high
+				// Used Prefered size of ASIO Buffer
+				nbSamples = driver.CreateBuffers(NumberOfOutputChannels, NumberOfInputChannels, false);
+				driver.SetChannelOffset(ChannelOffset, InputChannelOffset); // will throw an exception if channel offset is too high
+			}
 
-            if (waveProvider != null)
-            {
-                // make a buffer big enough to read enough from the sourceStream to fill the ASIO buffers
-                waveBuffer = new byte[nbSamples * NumberOfOutputChannels * waveProvider.WaveFormat.BitsPerSample / 8];
-            }
+			if (waveProvider != null)
+				// make a buffer big enough to read enough from the sourceStream to fill the ASIO buffers
+				waveBuffer = new byte[nbSamples * NumberOfOutputChannels * waveProvider.WaveFormat.BitsPerSample / 8];
+
+			isInitialized = true;
         }
 
         /// <summary>

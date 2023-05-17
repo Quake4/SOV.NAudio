@@ -19,7 +19,8 @@ namespace NAudio.Wave
         protected readonly AudioClientShareMode shareMode;
         private AudioRenderClient renderClient;
         private IWaveProvider sourceProvider;
-        private int latencyMilliseconds;
+		private WaveFormat sourceWaveFormat;
+		private int latencyMilliseconds;
         private int bufferFrameCount;
         private int bytesPerFrame;
         private readonly bool isUsingEventSync;
@@ -367,14 +368,22 @@ namespace NAudio.Wave
         /// <param name="waveProvider">IWaveProvider to play</param>
         public void Init(IWaveProvider waveProvider)
         {
-            long latencyRefTimes = latencyMilliseconds * 10000L;
-            OutputWaveFormat = waveProvider.WaveFormat;
+			if (sourceProvider != null && sourceWaveFormat.ToString() == waveProvider.WaveFormat.ToString())
+			{
+				sourceProvider = waveProvider;
+				return;
+			}
+
+			long latencyRefTimes = latencyMilliseconds * 10000L;
+			var prevOutputWaveFormat = OutputWaveFormat;
+			OutputWaveFormat = waveProvider.WaveFormat;
 
             // allow auto sample rate conversion - works for shared mode
             var flags = AudioClientStreamFlags.AutoConvertPcm | AudioClientStreamFlags.SrcDefaultQuality;
             sourceProvider = waveProvider;
+			sourceWaveFormat = waveProvider.WaveFormat;
 
-            if (shareMode == AudioClientShareMode.Exclusive)
+			if (shareMode == AudioClientShareMode.Exclusive)
             {
                 flags = AudioClientStreamFlags.None;
 				var format = new WaveFormatExtensible(OutputWaveFormat.SampleRate, OutputWaveFormat.BitsPerSample, OutputWaveFormat.Channels);
@@ -469,9 +478,13 @@ namespace NAudio.Wave
             }
             else
             {
-                // Normal setup for both sharedMode
-                audioClient.Initialize(shareMode, flags, latencyRefTimes, 0,
-                                    OutputWaveFormat, Guid.Empty);
+				if (prevOutputWaveFormat.ToString() != OutputWaveFormat.ToString())
+				{
+					audioClient.Dispose();
+					audioClient = mmDevice.AudioClient;
+				}
+				// Normal setup for both sharedMode
+				audioClient.Initialize(shareMode, flags, latencyRefTimes, 0, OutputWaveFormat, Guid.Empty);
             }
 
             // Get the RenderClient
