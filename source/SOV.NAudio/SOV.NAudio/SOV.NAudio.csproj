@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <Copyright>© Oleg Samsonov, Mark Heath 2023</Copyright>
+    <Copyright>© 2023 Oleg Samsonov, Mark Heath</Copyright>
     <RepositoryUrl>https://github.com/Quake4/SOV.NAudio</RepositoryUrl>
   </PropertyGroup>
 
