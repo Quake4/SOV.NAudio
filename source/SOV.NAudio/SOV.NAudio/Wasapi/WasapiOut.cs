@@ -19,8 +19,8 @@ namespace NAudio.Wave
         protected readonly AudioClientShareMode shareMode;
         private AudioRenderClient renderClient;
         private IWaveProvider sourceProvider;
-		private WaveFormat sourceWaveFormat;
-		private int latencyMilliseconds;
+        private WaveFormat sourceWaveFormat;
+        private int latencyMilliseconds;
         private int bufferFrameCount;
         private int bytesPerFrame;
         private readonly bool isUsingEventSync;
@@ -324,9 +324,9 @@ namespace NAudio.Wave
             {
                 if (playbackState == PlaybackState.Stopped)
                 {
-					playThread = new Thread(PlayThread)
-					{
-						Priority = ThreadPriority.Highest
+                    playThread = new Thread(PlayThread)
+                    {
+                        Priority = ThreadPriority.Highest
                     };
                     playbackState = PlaybackState.Playing;
                     playThread.Start();                    
@@ -368,26 +368,26 @@ namespace NAudio.Wave
         /// <param name="waveProvider">IWaveProvider to play</param>
         public void Init(IWaveProvider waveProvider)
         {
-			if (sourceProvider != null && sourceWaveFormat.ToString() == waveProvider.WaveFormat.ToString())
-			{
-				sourceProvider = waveProvider;
-				return;
-			}
+            if (sourceProvider != null && sourceWaveFormat.ToString() == waveProvider.WaveFormat.ToString())
+            {
+                sourceProvider = waveProvider;
+                return;
+            }
 
-			long latencyRefTimes = latencyMilliseconds * 10000L;
-			var prevOutputWaveFormat = OutputWaveFormat;
-			OutputWaveFormat = waveProvider.WaveFormat;
+            long latencyRefTimes = latencyMilliseconds * 10000L;
+            var prevOutputWaveFormat = OutputWaveFormat;
+            OutputWaveFormat = waveProvider.WaveFormat;
 
             // allow auto sample rate conversion - works for shared mode
             var flags = AudioClientStreamFlags.AutoConvertPcm | AudioClientStreamFlags.SrcDefaultQuality;
             sourceProvider = waveProvider;
-			sourceWaveFormat = waveProvider.WaveFormat;
+            sourceWaveFormat = waveProvider.WaveFormat;
 
-			if (shareMode == AudioClientShareMode.Exclusive)
+            if (shareMode == AudioClientShareMode.Exclusive)
             {
                 flags = AudioClientStreamFlags.None;
-				var format = new WaveFormatExtensible(OutputWaveFormat.SampleRate, OutputWaveFormat.BitsPerSample, OutputWaveFormat.Channels);
-				if (!audioClient.IsFormatSupported(shareMode, format, out WaveFormatExtensible closestSampleRateFormat))
+                var format = new WaveFormatExtensible(OutputWaveFormat.SampleRate, OutputWaveFormat.BitsPerSample, OutputWaveFormat.Channels);
+                if (!audioClient.IsFormatSupported(shareMode, format, out WaveFormatExtensible closestSampleRateFormat))
                 {
                     // Use closesSampleRateFormat (in sharedMode, it equals usualy to the audioClient.MixFormat)
                     // See documentation : http://msdn.microsoft.com/en-us/library/ms678737(VS.85).aspx 
@@ -477,13 +477,13 @@ namespace NAudio.Wave
                 audioClient.SetEventHandle(frameEventWaitHandle.SafeWaitHandle.DangerousGetHandle());
             }
             else if (prevOutputWaveFormat.ToString() != OutputWaveFormat.ToString())
-			{
-				audioClient.Dispose();
-				audioClient = mmDevice.AudioClient;
+            {
+                audioClient.Dispose();
+                audioClient = mmDevice.AudioClient;
 
-				// Normal setup for both sharedMode
-				audioClient.Initialize(shareMode, flags, latencyRefTimes, 0, OutputWaveFormat, Guid.Empty);
-			}
+                // Normal setup for both sharedMode
+                audioClient.Initialize(shareMode, flags, latencyRefTimes, 0, OutputWaveFormat, Guid.Empty);
+            }
 
             // Get the RenderClient
             renderClient = audioClient.AudioRenderClient;
@@ -512,11 +512,11 @@ namespace NAudio.Wave
 
                 audioClient.Dispose();
                 audioClient = null;
-				if (renderClient != null)
-				{
-					renderClient.Dispose();
-					renderClient = null;
-				}
+                if (renderClient != null)
+                {
+                    renderClient.Dispose();
+                    renderClient = null;
+                }
             }
         }
 
