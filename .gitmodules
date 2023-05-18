@@ -3,4 +3,4 @@
 	url = ../../naudio/NAudio.git
 [submodule "naudio-flac"]
 	path = module/naudio-flac
-	url = ../../stijnvdb88/NAudio.Flac.git
+	url = ../../Quake4/NAudio.Flac.git
