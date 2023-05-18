@@ -10,7 +10,6 @@ namespace SOV.NAudio
 		public AsioOut(string driverName)
 			: base(driverName)
 		{
-			AutoStop = true;
 		}
 	}
 }

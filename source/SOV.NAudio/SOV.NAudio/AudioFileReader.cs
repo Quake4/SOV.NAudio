@@ -42,6 +42,8 @@ namespace SOV.NAudio
 
 		public override int Read(byte[] buffer, int offset, int count)
 		{
+			if (readerStream == null)
+				return 0;
 			return readerStream.Read(buffer, offset, count);
 		}
 

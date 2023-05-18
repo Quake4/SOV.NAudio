@@ -60,7 +60,7 @@ namespace NAudio.Wave
         /// <param name="driverName">Name of the device.</param>
         public AsioOut(string driverName)
         {
-            this.syncContext = SynchronizationContext.Current;
+			syncContext = SynchronizationContext.Current;
             InitFromName(driverName);
         }
 
@@ -70,7 +70,7 @@ namespace NAudio.Wave
         /// <param name="driverIndex">Device number (zero based)</param>
         public AsioOut(int driverIndex)
         {
-            this.syncContext = SynchronizationContext.Current; 
+			syncContext = SynchronizationContext.Current; 
             String[] names = GetDriverNames();
             if (names.Length == 0)
             {
@@ -198,7 +198,6 @@ namespace NAudio.Wave
             if (playbackState != PlaybackState.Playing)
             {
                 playbackState = PlaybackState.Playing;
-                HasReachedEnd = false;
                 driver.Start();
             }
         }
@@ -210,7 +209,6 @@ namespace NAudio.Wave
         {
             playbackState = PlaybackState.Stopped;
             driver.Stop();
-            //HasReachedEnd = false;
             RaisePlaybackStopped(null);
         }
 
@@ -344,9 +342,14 @@ namespace NAudio.Wave
 
                 if (read == 0)
                 {
-					HasReachedEnd = true;
-					if (AutoStop)
-                        Stop(); // this can cause hanging issues
+					if (syncContext != null)
+						syncContext.Post(s => Stop(), null);
+					else
+					{
+						var thread = new Thread(() => Stop());
+						thread.SetApartmentState(ApartmentState.STA);
+						thread.Start();
+					}
                 }
             }
         }
@@ -363,19 +366,6 @@ namespace NAudio.Wave
                 return latency;
             }
         }
-
-        /// <summary>
-        /// Automatically stop when the end of the input stream is reached
-        /// Disable this if auto-stop is causing hanging issues
-        /// </summary>
-        public bool AutoStop { get; set; } 
-
-        /// <summary>
-        /// A flag to let you know that we have reached the end of the input file
-        /// Useful if AutoStop is set to false
-        /// You can monitor this yourself and call Stop when it is true
-        /// </summary>
-        public bool HasReachedEnd { get; private set; }
 
         /// <summary>
         /// Playback State
