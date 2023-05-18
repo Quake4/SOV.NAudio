@@ -278,7 +278,7 @@ namespace NAudio.Wave
                     {
                         var format = new WaveFormatExtensible(sampleRate, bitDepth, channelCount);
                         if (audioClient.IsFormatSupported(shareMode, format))
-                            return format;
+                            return format.ToStandardWaveFormat();
                     }
                 }
             }
@@ -476,16 +476,14 @@ namespace NAudio.Wave
                 frameEventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
                 audioClient.SetEventHandle(frameEventWaitHandle.SafeWaitHandle.DangerousGetHandle());
             }
-            else
-            {
-				if (prevOutputWaveFormat.ToString() != OutputWaveFormat.ToString())
-				{
-					audioClient.Dispose();
-					audioClient = mmDevice.AudioClient;
-				}
+            else if (prevOutputWaveFormat.ToString() != OutputWaveFormat.ToString())
+			{
+				audioClient.Dispose();
+				audioClient = mmDevice.AudioClient;
+
 				// Normal setup for both sharedMode
 				audioClient.Initialize(shareMode, flags, latencyRefTimes, 0, OutputWaveFormat, Guid.Empty);
-            }
+			}
 
             // Get the RenderClient
             renderClient = audioClient.AudioRenderClient;
