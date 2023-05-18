@@ -108,6 +108,7 @@ namespace NAudio.Flac
 
             //skip ID3v2
             //NAudio.Flac.ID3v2.SkipTag(stream);
+            Id3v2Tag.ReadTag(stream);
 
             //read fLaC sync
             var beginSync = new byte[4];
