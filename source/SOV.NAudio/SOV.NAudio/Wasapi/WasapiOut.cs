@@ -5,6 +5,7 @@ using System.Threading;
 using System.Runtime.InteropServices;
 using NAudio.Utils;
 using System.Collections.Generic;
+using System.Linq;
 
 // ReSharper disable once CheckNamespace
 namespace NAudio.Wave
@@ -252,16 +253,27 @@ namespace NAudio.Wave
             var deviceSampleRate = audioClient.MixFormat.SampleRate;
             var deviceChannels = audioClient.MixFormat.Channels; // almost certain to be stereo
 
-            // we are in exclusive mode
-            // First priority is to try the sample rate you provided.
-            var sampleRatesToTry = new List<int>() { OutputWaveFormat.SampleRate };
-            // Second priority is to use the sample rate the device wants
-            if (!sampleRatesToTry.Contains(deviceSampleRate)) sampleRatesToTry.Add(deviceSampleRate);
-            // And if we've not already got 44.1 and 48kHz in the list, let's try them too
-            if (!sampleRatesToTry.Contains(44100)) sampleRatesToTry.Add(44100);
-            if (!sampleRatesToTry.Contains(48000)) sampleRatesToTry.Add(48000);
+			// we are in exclusive mode
+			// First priority is to try the sample rate you provided.
+			var sampleRatesToTry = new List<int>();
+			var sampleRatesToTryLower = new List<int>();
+			// And if we've not already got 44.1 and 48kHz in the list, let's try them too
+			var baseSampleRate = OutputWaveFormat.SampleRate % 44100 == 0 ? 44100 : 48000;
+			for (int i = 1; i <= (1 << 4); i = i << 1)
+			{
+				var sr = i * baseSampleRate;
+				if (sr < OutputWaveFormat.SampleRate)
+					sampleRatesToTryLower.Add(sr);
+				else
+					sampleRatesToTry.Add(sr);
+			}
+			// Add lower as reverse
+			sampleRatesToTryLower.Reverse();
+			sampleRatesToTry.AddRange(sampleRatesToTryLower);
+			// Last priority is to use the sample rate the device wants
+			if (!sampleRatesToTry.Contains(deviceSampleRate)) sampleRatesToTry.Add(deviceSampleRate);
 
-            var channelCountsToTry = new List<int>() { OutputWaveFormat.Channels };
+			var channelCountsToTry = new List<int>() { OutputWaveFormat.Channels };
             if (!channelCountsToTry.Contains(deviceChannels)) channelCountsToTry.Add(deviceChannels);
             if (!channelCountsToTry.Contains(2)) channelCountsToTry.Add(2);
 
