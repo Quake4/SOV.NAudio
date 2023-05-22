@@ -243,7 +243,7 @@ namespace NAudio.Flac
                 lock (_bufferLock)
                 {
 #if !DIAGNOSTICS
-                    if (_frameIndex == _scan.Frames.Count)
+                    if (_frameIndex >= _scan.Frames.Count)
                         return Length;
                     return _scan.Frames[_frameIndex].SampleOffset * WaveFormat.BlockAlign + _overflowOffset;
 #else
