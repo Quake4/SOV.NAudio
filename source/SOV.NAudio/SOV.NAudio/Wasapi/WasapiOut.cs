@@ -259,7 +259,7 @@ namespace NAudio.Wave
 			var sampleRatesToTryLower = new List<int>();
 			// And if we've not already got 44.1 and 48kHz in the list, let's try them too
 			var baseSampleRate = OutputWaveFormat.SampleRate % 44100 == 0 ? 44100 : 48000;
-			for (int i = 1; i <= (1 << 4); i = i << 1)
+			for (int i = 1; i < (1 << 4); i = i << 1)
 			{
 				var sr = i * baseSampleRate;
 				if (sr < OutputWaveFormat.SampleRate)
@@ -271,7 +271,7 @@ namespace NAudio.Wave
 			sampleRatesToTryLower.Reverse();
 			sampleRatesToTry.AddRange(sampleRatesToTryLower);
 			// Last priority is to use the sample rate the device wants
-			if (!sampleRatesToTry.Contains(deviceSampleRate)) sampleRatesToTry.Add(deviceSampleRate);
+			//if (!sampleRatesToTry.Contains(deviceSampleRate)) sampleRatesToTry.Add(deviceSampleRate);
 
 			var channelCountsToTry = new List<int>() { OutputWaveFormat.Channels };
             if (!channelCountsToTry.Contains(deviceChannels)) channelCountsToTry.Add(deviceChannels);
@@ -380,7 +380,7 @@ namespace NAudio.Wave
         /// <param name="waveProvider">IWaveProvider to play</param>
         public void Init(IWaveProvider waveProvider)
         {
-            if (sourceProvider != null && sourceWaveFormat.ToString() == waveProvider.WaveFormat.ToString())
+            if (sourceProvider != null && sourceWaveFormat == waveProvider.WaveFormat && sourceWaveFormat.ToString() == waveProvider.WaveFormat.ToString())
             {
                 sourceProvider = waveProvider;
                 return;
@@ -438,60 +438,63 @@ namespace NAudio.Wave
                 }
             }
 
-            // If using EventSync, setup is specific with shareMode
-            if (isUsingEventSync)
+			// If using EventSync, setup is specific with shareMode
+			if (isUsingEventSync)
+			{
+				// Init Shared or Exclusive
+				if (shareMode == AudioClientShareMode.Shared)
+				{
+					// With EventCallBack and Shared, both latencies must be set to 0 (update - not sure this is true anymore)
+					// 
+					audioClient.Initialize(shareMode, AudioClientStreamFlags.EventCallback | flags, latencyRefTimes, 0,
+						OutputWaveFormat, Guid.Empty);
+
+					// Windows 10 returns 0 from stream latency, resulting in maxing out CPU usage later
+					var streamLatency = audioClient.StreamLatency;
+					if (streamLatency != 0)
+					{
+						// Get back the effective latency from AudioClient
+						latencyMilliseconds = (int)(streamLatency / 10000);
+					}
+				}
+				else
+				{
+					try
+					{
+						// With EventCallBack and Exclusive, both latencies must equals
+						audioClient.Initialize(shareMode, AudioClientStreamFlags.EventCallback | flags, latencyRefTimes, latencyRefTimes,
+											OutputWaveFormat, Guid.Empty);
+					}
+					catch (COMException ex)
+					{
+						// Starting with Windows 7, Initialize can return AUDCLNT_E_BUFFER_SIZE_NOT_ALIGNED for a render device.
+						// We should to initialize again.
+						if (ex.ErrorCode != AudioClientErrorCode.BufferSizeNotAligned)
+							throw;
+
+						// Calculate the new latency.
+						long newLatencyRefTimes = (long)(10000000.0 /
+							(double)this.OutputWaveFormat.SampleRate *
+							(double)this.audioClient.BufferSize + 0.5);
+
+						this.audioClient.Dispose();
+						this.audioClient = this.mmDevice.AudioClient;
+						this.audioClient.Initialize(this.shareMode, AudioClientStreamFlags.EventCallback | flags,
+											newLatencyRefTimes, newLatencyRefTimes, this.OutputWaveFormat, Guid.Empty);
+					}
+				}
+
+				// Create the Wait Event Handle
+				frameEventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
+				audioClient.SetEventHandle(frameEventWaitHandle.SafeWaitHandle.DangerousGetHandle());
+			}
+			else if (prevOutputWaveFormat.ToString() != OutputWaveFormat.ToString() || !audioClient.IsInitialized)
             {
-                // Init Shared or Exclusive
-                if (shareMode == AudioClientShareMode.Shared)
-                {
-                    // With EventCallBack and Shared, both latencies must be set to 0 (update - not sure this is true anymore)
-                    // 
-                    audioClient.Initialize(shareMode, AudioClientStreamFlags.EventCallback | flags, latencyRefTimes, 0,
-                        OutputWaveFormat, Guid.Empty);
-
-                    // Windows 10 returns 0 from stream latency, resulting in maxing out CPU usage later
-                    var streamLatency = audioClient.StreamLatency;
-                    if (streamLatency != 0)
-                    {
-                        // Get back the effective latency from AudioClient
-                        latencyMilliseconds = (int)(streamLatency / 10000);
-                    }
-                }
-                else
-                {
-                    try
-                    {
-                        // With EventCallBack and Exclusive, both latencies must equals
-                        audioClient.Initialize(shareMode, AudioClientStreamFlags.EventCallback | flags, latencyRefTimes, latencyRefTimes,
-                                            OutputWaveFormat, Guid.Empty);
-                    }
-                    catch (COMException ex)
-                    {
-                        // Starting with Windows 7, Initialize can return AUDCLNT_E_BUFFER_SIZE_NOT_ALIGNED for a render device.
-                        // We should to initialize again.
-                        if (ex.ErrorCode != AudioClientErrorCode.BufferSizeNotAligned)
-                            throw;
-
-                        // Calculate the new latency.
-                        long newLatencyRefTimes = (long)(10000000.0 /
-                            (double)this.OutputWaveFormat.SampleRate *
-                            (double)this.audioClient.BufferSize + 0.5);
-
-                        this.audioClient.Dispose();
-                        this.audioClient = this.mmDevice.AudioClient;
-                        this.audioClient.Initialize(this.shareMode, AudioClientStreamFlags.EventCallback | flags,
-                                            newLatencyRefTimes, newLatencyRefTimes, this.OutputWaveFormat, Guid.Empty);
-                    }
-                }
-
-                // Create the Wait Event Handle
-                frameEventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
-                audioClient.SetEventHandle(frameEventWaitHandle.SafeWaitHandle.DangerousGetHandle());
-            }
-            else if (prevOutputWaveFormat.ToString() != OutputWaveFormat.ToString())
-            {
-                audioClient.Dispose();
-                audioClient = mmDevice.AudioClient;
+				if (audioClient.IsInitialized)
+				{
+					audioClient.Dispose();
+					audioClient = mmDevice.AudioClient;
+				}
 
                 // Normal setup for both sharedMode
                 audioClient.Initialize(shareMode, flags, latencyRefTimes, 0, OutputWaveFormat, Guid.Empty);
