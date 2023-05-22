@@ -7,18 +7,20 @@ using NAudio.Wasapi.CoreAudioApi;
 
 namespace NAudio.CoreAudioApi
 {
-    /// <summary>
-    /// Windows CoreAudio AudioClient
-    /// </summary>
-    public class AudioClient : IDisposable
-    {
-        private IAudioClient audioClientInterface;
-        private WaveFormat mixFormat;
-        private AudioRenderClient audioRenderClient;
-        //private AudioCaptureClient audioCaptureClient;
-        private AudioClockClient audioClockClient;
-        //private AudioStreamVolume audioStreamVolume;
-        private AudioClientShareMode shareMode;
+	/// <summary>
+	/// Windows CoreAudio AudioClient
+	/// </summary>
+	public class AudioClient : IDisposable
+	{
+		private IAudioClient audioClientInterface;
+		private WaveFormat mixFormat;
+		private AudioRenderClient audioRenderClient;
+		//private AudioCaptureClient audioCaptureClient;
+		private AudioClockClient audioClockClient;
+		//private AudioStreamVolume audioStreamVolume;
+		//private AudioClientShareMode shareMode;
+
+        public bool IsInitialized { get; protected set; } = false;
 
         public static async Task<AudioClient> ActivateAsync(string deviceInterfacePath, AudioClientProperties? audioClientProperties)
         {
@@ -93,12 +95,13 @@ namespace NAudio.CoreAudioApi
             WaveFormat waveFormat,
             Guid audioSessionGuid)
         {
-            this.shareMode = shareMode;
+            //this.shareMode = shareMode;
             var format = waveFormat is WaveFormatExtensible ? waveFormat : new WaveFormatExtensible(waveFormat.SampleRate, waveFormat.BitsPerSample, waveFormat.Channels);
             int hresult = audioClientInterface.Initialize(shareMode, streamFlags, bufferDuration, periodicity, format, ref audioSessionGuid);
             Marshal.ThrowExceptionForHR(hresult);
             // may have changed the mix format so reset it
             mixFormat = null;
+            IsInitialized = true;
         }
 
         /// <summary>
