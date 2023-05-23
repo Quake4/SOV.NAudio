@@ -250,7 +250,7 @@ namespace NAudio.Wave
 
         private WaveFormat GetFallbackFormat()
         {
-            var deviceSampleRate = audioClient.MixFormat.SampleRate;
+            //var deviceSampleRate = audioClient.MixFormat.SampleRate;
             var deviceChannels = audioClient.MixFormat.Channels; // almost certain to be stereo
 
 			// we are in exclusive mode
@@ -441,6 +441,12 @@ namespace NAudio.Wave
 			// If using EventSync, setup is specific with shareMode
 			if (isUsingEventSync)
 			{
+				if (audioClient.IsInitialized)
+				{
+					audioClient.Dispose();
+					audioClient = mmDevice.AudioClient;
+				}
+
 				// Init Shared or Exclusive
 				if (shareMode == AudioClientShareMode.Shared)
 				{
