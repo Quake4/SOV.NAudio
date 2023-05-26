@@ -238,47 +238,74 @@ namespace NAudio.Wave
         /// <param name="recordOnlySampleRate">Specify sample rate here if only recording, ignored otherwise</param>
         public void InitRecordAndPlayback(IWaveProvider waveProvider, int recordChannels, int recordOnlySampleRate)
         {
-            if (waveProvider != null && isInitialized && waveProvider.WaveFormat.ToString() == sourceWaveFormat.ToString()) {
+            if (waveProvider != null && isInitialized && waveProvider.WaveFormat.ToString() == sourceWaveFormat.ToString() && waveProvider.WaveFormat == sourceWaveFormat) {
                 sourceStream = waveProvider;
                 return;
             }
 
-            int desiredSampleRate = waveProvider != null ? waveProvider.WaveFormat.SampleRate : recordOnlySampleRate;
+			var previousWaveFormat = sourceWaveFormat;
 
-            if (waveProvider != null)
+			int desiredSampleRate = waveProvider != null ? waveProvider.WaveFormat.SampleRate : recordOnlySampleRate;
+			if (!driver.IsSampleRateSupported(desiredSampleRate))
+				throw new ArgumentException($"Desired SampleRate {desiredSampleRate} is not supported.");
+
+			if (waveProvider != null)
             {
                 sourceStream = waveProvider;
                 sourceWaveFormat = waveProvider.WaveFormat;
+                NumberOfOutputChannels = waveProvider.WaveFormat.Channels;
 
-                this.NumberOfOutputChannels = waveProvider.WaveFormat.Channels;
+				// check dsd native
+				try
+				{
+					if (previousWaveFormat == null ||
+						previousWaveFormat.Encoding == WaveFormatEncoding.DSD && waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD ||
+						previousWaveFormat.Encoding != WaveFormatEncoding.DSD && waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD)
+					{
+						var format = new AsioIoFormat { FormatType = waveProvider.WaveFormat.BitsPerSample == 1 ? AsioIoFormatType.DSDFormat : AsioIoFormatType.PCMFormat };
+						driver.Driver.Future((int)AsioFeature.kAsioSetIoFormat, ref format);
+						driver.BuildCapabilities();
+						if (isInitialized)
+						{
+							driver.DisposeBuffers();
+							isInitialized = false;
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					System.Diagnostics.Debug.WriteLine($"DSD Native isnt found!" + ex.Message);
+				}
 
-                // Select the correct sample convertor from WaveFormat -> ASIOFormat
-                var asioSampleType = driver.Capabilities.OutputChannelInfos[0].type;
-                convertor = AsioSampleConvertor.SelectSampleConvertor(waveProvider.WaveFormat, asioSampleType);
+				// Select the correct sample convertor from WaveFormat -> ASIOFormat
+				var asioSampleType = driver.Capabilities.OutputChannelInfos[0].type;
+				var outChannels = waveProvider.WaveFormat.Channels > driver.Capabilities.NbOutputChannels ? driver.Capabilities.NbOutputChannels : waveProvider.WaveFormat.Channels;
+				convertor = AsioSampleConvertor.SelectSampleConvertor(waveProvider.WaveFormat, asioSampleType);
 
-                switch (asioSampleType)
+				switch (asioSampleType)
                 {
                     case AsioSampleType.Float32LSB:
-                        OutputWaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(waveProvider.WaveFormat.SampleRate, waveProvider.WaveFormat.Channels);
+                        OutputWaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(waveProvider.WaveFormat.SampleRate, outChannels);
                         break;
                     case AsioSampleType.Int32LSB:
-                        OutputWaveFormat = new WaveFormat(waveProvider.WaveFormat.SampleRate, 32, waveProvider.WaveFormat.Channels);
+                        OutputWaveFormat = new WaveFormat(waveProvider.WaveFormat.SampleRate, 32, outChannels);
                         break;
                     case AsioSampleType.Int16LSB:
-                        OutputWaveFormat = new WaveFormat(waveProvider.WaveFormat.SampleRate, 16, waveProvider.WaveFormat.Channels);
+                        OutputWaveFormat = new WaveFormat(waveProvider.WaveFormat.SampleRate, 16, outChannels);
                         break;
                     case AsioSampleType.Int24LSB:
-                        OutputWaveFormat = new WaveFormat(waveProvider.WaveFormat.SampleRate, 24, waveProvider.WaveFormat.Channels);
+                        OutputWaveFormat = new WaveFormat(waveProvider.WaveFormat.SampleRate, 24, outChannels);
                         break;
-                    default:
+					case AsioSampleType.DSDInt8MSB1:
+						OutputWaveFormat = WaveFormat.CreateCustomFormat(waveProvider.WaveFormat.Encoding, waveProvider.WaveFormat.SampleRate, outChannels,
+							waveProvider.WaveFormat.SampleRate * outChannels * waveProvider.WaveFormat.BitsPerSample / 8, waveProvider.WaveFormat.BlockAlign, waveProvider.WaveFormat.BitsPerSample);
+						break;
+					default:
                         throw new NotSupportedException($"{asioSampleType} not currently supported");
                 }
             }
             else
-                this.NumberOfOutputChannels = 0;
-
-            if (!driver.IsSampleRateSupported(desiredSampleRate))
-                throw new ArgumentException("SampleRate is not supported");
+                NumberOfOutputChannels = 0;
 
             if (driver.Capabilities.SampleRate != desiredSampleRate)
             {
@@ -297,7 +324,8 @@ namespace NAudio.Wave
                 NumberOfInputChannels = recordChannels;
 
                 // Used Prefered size of ASIO Buffer
-                nbSamples = driver.CreateBuffers(NumberOfOutputChannels, NumberOfInputChannels, false);
+                nbSamples = driver.CreateBuffers(driver.Capabilities.NbOutputChannels < NumberOfOutputChannels ? driver.Capabilities.NbOutputChannels : NumberOfOutputChannels,
+					NumberOfInputChannels, false);
                 driver.SetChannelOffset(ChannelOffset, InputChannelOffset); // will throw an exception if channel offset is too high
             }
 
