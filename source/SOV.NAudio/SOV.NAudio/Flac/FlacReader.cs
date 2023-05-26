@@ -13,7 +13,6 @@ namespace NAudio.Flac
     ///     Provides a decoder for decoding flac (Free Lostless Audio Codec) data.
     /// </summary>
     public class FlacReader : WaveStream, IDisposable, IWaveProvider
-    
     {
         private readonly Stream _stream;
         private readonly WaveFormat _waveFormat;
