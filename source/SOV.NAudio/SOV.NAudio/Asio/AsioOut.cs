@@ -29,6 +29,7 @@ namespace NAudio.Wave
 
         private readonly SynchronizationContext syncContext;
         private bool isInitialized;
+		private bool isSendStop;
 
         /// <summary>
         /// Playback Stopped
@@ -199,7 +200,8 @@ namespace NAudio.Wave
             {
                 playbackState = PlaybackState.Playing;
                 driver.Start();
-            }
+				isSendStop = false;
+			}
         }
 
         /// <summary>
@@ -208,7 +210,8 @@ namespace NAudio.Wave
         public void Stop()
         {
             playbackState = PlaybackState.Stopped;
-            driver.Stop();
+			driver.Stop();
+			isSendStop = false;
             RaisePlaybackStopped(null);
         }
 
@@ -309,12 +312,12 @@ namespace NAudio.Wave
 
             if (driver.Capabilities.SampleRate != desiredSampleRate)
             {
-                driver.SetSampleRate(desiredSampleRate);
-                if (isInitialized)
-                {
-                    driver.DisposeBuffers();
-                    isInitialized = false;
-                }
+				if (isInitialized)
+				{
+					driver.DisposeBuffers();
+					isInitialized = false;
+				}
+				driver.SetSampleRate(desiredSampleRate);
             }
 
             if (!isInitialized)
@@ -361,8 +364,12 @@ namespace NAudio.Wave
                 int read = sourceStream.Read(waveBuffer, 0, waveBuffer.Length);
                 if (read < waveBuffer.Length)
                 {
-                    // we have reached the end of the input data - clear out the end
-                    Array.Clear(waveBuffer, read, waveBuffer.Length - read);
+					// we have reached the end of the input data - clear out the end
+					if (OutputWaveFormat.Encoding == WaveFormatEncoding.DSD)
+						for (var i = read; i < waveBuffer.Length; i++)
+							waveBuffer[i] = (byte)0x69;
+					else
+						Array.Clear(waveBuffer, read, waveBuffer.Length - read);
                 }
 
                 // Call the convertor
@@ -374,14 +381,15 @@ namespace NAudio.Wave
                         convertor(new IntPtr(pBuffer), outputChannels, NumberOfOutputChannels, nbSamples);
                     }
                 }
-
-                if (read == 0)
+				
+                if (read == 0 && !isSendStop)
                 {
-                    if (syncContext != null)
-                        syncContext.Post(s => Stop(), null);
-                    else
-                    {
-                        var thread = new Thread(() => Stop());
+					isSendStop = true;
+					if (syncContext != null)
+						syncContext.Post(s => Stop(), null);
+					else
+					{
+						var thread = new Thread(() => Stop());
                         thread.SetApartmentState(ApartmentState.STA);
                         thread.Start();
                     }
