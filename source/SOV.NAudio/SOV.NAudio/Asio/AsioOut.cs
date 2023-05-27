@@ -310,7 +310,7 @@ namespace NAudio.Wave
             else
                 NumberOfOutputChannels = 0;
 
-            if (driver.Capabilities.SampleRate != desiredSampleRate)
+            if (driver.Capabilities.SampleRate != desiredSampleRate || !isInitialized)
             {
 				if (isInitialized)
 				{
