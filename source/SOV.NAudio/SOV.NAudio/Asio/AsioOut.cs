@@ -277,7 +277,7 @@ namespace NAudio.Wave
 				}
 				catch (Exception ex)
 				{
-					System.Diagnostics.Debug.WriteLine($"DSD Native isnt found!" + ex.Message);
+					System.Diagnostics.Debug.WriteLine($"DSD Native isn't found!" + ex.Message);
 				}
 
 				// Select the correct sample convertor from WaveFormat -> ASIOFormat
