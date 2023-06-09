@@ -5,7 +5,7 @@ namespace SOV.NAudio
 	public class FlacFileReader : FlacReader
 	{
 		public FlacFileReader(string filename)
-			: base(filename)
+			: base(System.IO.File.OpenRead(filename), FlacPreScanMethodMode.Async)
 		{
 		}
 	}
