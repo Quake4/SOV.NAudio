@@ -285,7 +285,7 @@ namespace NAudio.Flac
         /// </summary>
         public override long Length
         {
-            get { return _streamInfo.TotalSamples * WaveFormat.BlockAlign; }
+            get { return (CanSeek ? _scan.TotalSamples : _streamInfo.TotalSamples) * WaveFormat.BlockAlign; }
         }
 
         /// <summary>
