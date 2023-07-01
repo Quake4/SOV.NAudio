@@ -249,6 +249,7 @@ namespace NAudio.Wave
 			var previousWaveFormat = sourceWaveFormat;
 
 			int desiredSampleRate = waveProvider != null ? waveProvider.WaveFormat.SampleRate : recordOnlySampleRate;
+			int bitsPerSample = waveProvider.WaveFormat.BitsPerSample;
 			if (!driver.IsSampleRateSupported(desiredSampleRate))
 				throw new ArgumentException($"Desired SampleRate {desiredSampleRate} is not supported.");
 
@@ -278,6 +279,8 @@ namespace NAudio.Wave
 				catch (Exception ex)
 				{
 					System.Diagnostics.Debug.WriteLine($"DSD Native isn't found!" + ex.Message);
+					if (waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD)
+						desiredSampleRate = waveProvider.WaveFormat.SampleRate / 16;
 				}
 
 				// Select the correct sample convertor from WaveFormat -> ASIOFormat
@@ -286,21 +289,33 @@ namespace NAudio.Wave
 				convertor = AsioSampleConvertor.SelectSampleConvertor(waveProvider.WaveFormat, asioSampleType);
 
 				switch (asioSampleType)
-                {
-                    case AsioSampleType.Float32LSB:
-                        OutputWaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(waveProvider.WaveFormat.SampleRate, outChannels);
-                        break;
-                    case AsioSampleType.Int32LSB:
-                        OutputWaveFormat = new WaveFormat(waveProvider.WaveFormat.SampleRate, 32, outChannels);
+				{
+					case AsioSampleType.Float32LSB:
+						OutputWaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(desiredSampleRate, outChannels);
+						break;
+					case AsioSampleType.Int32LSB:
+						OutputWaveFormat = new WaveFormat(desiredSampleRate, 32, outChannels);
+						if (waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD)
+						{
+							bitsPerSample = 16;
+							OutputWaveFormat = WaveFormat.CreateCustomFormat(WaveFormatEncoding.DoP,
+								OutputWaveFormat.SampleRate, outChannels, OutputWaveFormat.AverageBytesPerSecond, OutputWaveFormat.BlockAlign, OutputWaveFormat.BitsPerSample);
+						}
                         break;
                     case AsioSampleType.Int16LSB:
-                        OutputWaveFormat = new WaveFormat(waveProvider.WaveFormat.SampleRate, 16, outChannels);
+						OutputWaveFormat = new WaveFormat(desiredSampleRate, 16, outChannels);
                         break;
                     case AsioSampleType.Int24LSB:
-                        OutputWaveFormat = new WaveFormat(waveProvider.WaveFormat.SampleRate, 24, outChannels);
-                        break;
+						OutputWaveFormat = new WaveFormat(desiredSampleRate, 24, outChannels);
+						if (waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD)
+						{
+							bitsPerSample = 16;
+							OutputWaveFormat = WaveFormat.CreateCustomFormat(WaveFormatEncoding.DoP,
+								OutputWaveFormat.SampleRate, outChannels, OutputWaveFormat.AverageBytesPerSecond, OutputWaveFormat.BlockAlign, OutputWaveFormat.BitsPerSample);
+						}
+						break;
 					case AsioSampleType.DSDInt8MSB1:
-						OutputWaveFormat = WaveFormat.CreateCustomFormat(waveProvider.WaveFormat.Encoding, waveProvider.WaveFormat.SampleRate, outChannels,
+						OutputWaveFormat = WaveFormat.CreateCustomFormat(waveProvider.WaveFormat.Encoding, desiredSampleRate, outChannels,
 							waveProvider.WaveFormat.SampleRate * outChannels * waveProvider.WaveFormat.BitsPerSample / 8, waveProvider.WaveFormat.BlockAlign, waveProvider.WaveFormat.BitsPerSample);
 						break;
 					default:
@@ -334,7 +349,7 @@ namespace NAudio.Wave
 
             if (waveProvider != null)
                 // make a buffer big enough to read enough from the sourceStream to fill the ASIO buffers
-                waveBuffer = new byte[nbSamples * NumberOfOutputChannels * waveProvider.WaveFormat.BitsPerSample / 8];
+                waveBuffer = new byte[nbSamples * NumberOfOutputChannels * bitsPerSample / 8];
 
             isInitialized = true;
         }

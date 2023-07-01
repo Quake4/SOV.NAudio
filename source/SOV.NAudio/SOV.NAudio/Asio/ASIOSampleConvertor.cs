@@ -37,6 +37,9 @@ namespace NAudio.Wave.Asio
 				case AsioSampleType.Int32LSB:
                     switch (waveFormat.BitsPerSample)
                     {
+						case 1:
+							convertor = ConvertorDsdToDop32;
+							break;
 						case 16:
                             convertor = (is2Channels) ? (SampleConvertor)ConvertorShortToInt2Channels : (SampleConvertor)ConvertorShortToIntGeneric;
                             break;
@@ -68,7 +71,10 @@ namespace NAudio.Wave.Asio
                 case AsioSampleType.Int24LSB:
                     switch (waveFormat.BitsPerSample)
                     {
-                        case 16:
+						case 1:
+							convertor = ConvertorDsdToDop24;
+							break;
+						case 16:
                             throw new ArgumentException(exception);
                         case 32:
                             if (waveFormat.Encoding == WaveFormatEncoding.IeeeFloat)
@@ -103,6 +109,82 @@ namespace NAudio.Wave.Asio
 
             return convertor;
         }
+
+		public static void ConvertorDsdToDop24(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
+		{
+			// to stereo
+			if (asioOutputBuffers.Length == 2)
+			{
+				unsafe
+				{
+					byte* inputSamples = (byte*)inputInterleavedBuffer;
+					byte* leftSamples = (byte*)asioOutputBuffers[0];
+					byte* rightSamples = (byte*)asioOutputBuffers[1];
+
+					for (int i = 0; i < nbSamples / 2; i++)
+					{
+						*leftSamples++ = inputSamples[0 + nbChannels * 1];
+						*leftSamples++ = inputSamples[0 + nbChannels * 0];
+						*leftSamples++ = 0x05;
+
+						*rightSamples++ = inputSamples[1 + nbChannels * 1];
+						*rightSamples++ = inputSamples[1 + nbChannels * 0];
+						*rightSamples++ = 0x05;
+
+						*leftSamples++ = inputSamples[0 + nbChannels * 3];
+						*leftSamples++ = inputSamples[0 + nbChannels * 2];
+						*leftSamples++ = 0xFA;
+
+						*rightSamples++ = inputSamples[1 + nbChannels * 3];
+						*rightSamples++ = inputSamples[1 + nbChannels * 2];
+						*rightSamples++ = 0xFA;
+
+						// Go to next sample
+						inputSamples += 4 * nbChannels;
+					}
+				}
+			}
+		}
+
+		public static void ConvertorDsdToDop32(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
+		{
+			// to stereo
+			if (asioOutputBuffers.Length == 2)
+			{
+				unsafe
+				{
+					byte* inputSamples = (byte*)inputInterleavedBuffer;
+					byte* leftSamples = (byte*)asioOutputBuffers[0];
+					byte* rightSamples = (byte*)asioOutputBuffers[1];
+
+					for (int i = 0; i < nbSamples / 2; i++)
+					{
+						*leftSamples++ = 0x69;
+						*leftSamples++ = inputSamples[0 + nbChannels * 1];
+						*leftSamples++ = inputSamples[0 + nbChannels * 0];
+						*leftSamples++ = 0x05;
+
+						*rightSamples++ = 0x69;
+						*rightSamples++ = inputSamples[1 + nbChannels * 1];
+						*rightSamples++ = inputSamples[1 + nbChannels * 0];
+						*rightSamples++ = 0x05;
+
+						*leftSamples++ = 0x69;
+						*leftSamples++ = inputSamples[0 + nbChannels * 3];
+						*leftSamples++ = inputSamples[0 + nbChannels * 2];
+						*leftSamples++ = 0xFA;
+
+						*rightSamples++ = 0x69;
+						*rightSamples++ = inputSamples[1 + nbChannels * 3];
+						*rightSamples++ = inputSamples[1 + nbChannels * 2];
+						*rightSamples++ = 0xFA;
+
+						// Go to next sample
+						inputSamples += 4 * nbChannels;
+					}
+				}
+			}
+		}
 
 		public static void ConvertorDsdToByteGeneric(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
 		{
