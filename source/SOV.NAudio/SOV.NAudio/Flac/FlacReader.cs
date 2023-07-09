@@ -191,16 +191,20 @@ namespace NAudio.Flac
 
                     while (!frame.NextFrame())
                     {
-                        if (CanSeek) //go to next frame
-                        {
-                            if (++_frameIndex >= _scan.Frames.Count)
-                                return read;
-                            _stream.Position = _scan.Frames[_frameIndex].StreamOffset;
-                        }
-                    }
+						if (CanSeek) //go to next frame
+						{
+							if (++_frameIndex >= _scan.Frames.Count)
+								return read;
+							_stream.Position = _scan.Frames[_frameIndex].StreamOffset;
+						}
+						else if (_stream.Position == _stream.Length)
+							return read;
+						else
+							_stream.Position++;
+					}
                     _frameIndex++;
 
-                    int bufferlength = frame.GetBuffer(ref _overflowBuffer, 0);
+                    int bufferlength = frame.GetBuffer(ref _overflowBuffer);
                     int bytesToCopy = Math.Min(count - read, bufferlength);
                     Array.Copy(_overflowBuffer, 0, buffer, offset, bytesToCopy);
                     read += bytesToCopy;

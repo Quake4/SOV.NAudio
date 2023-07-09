@@ -41,7 +41,7 @@ namespace NAudio.Wave.Asio
 							convertor = ConvertorDsdToDop32;
 							break;
 						case 16:
-                            convertor = (is2Channels) ? (SampleConvertor)ConvertorShortToInt2Channels : (SampleConvertor)ConvertorShortToIntGeneric;
+                            convertor = ConvertorShortToIntGeneric;
                             break;
                         case 24:
                             convertor = Convertor24ToIntGeneric;
@@ -211,57 +211,63 @@ namespace NAudio.Wave.Asio
 
 		public static void Convertor24ToIntGeneric(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
         {
-			// to stereo
-			if (asioOutputBuffers.Length == 2)
+			unsafe
 			{
-				unsafe
-				{
-					byte* inputSamples = (byte*)inputInterleavedBuffer;
-					byte* leftSamples = (byte*)asioOutputBuffers[0];
-					byte* rightSamples = (byte*)asioOutputBuffers[1];
+				int channels = asioOutputBuffers.Length;
+				byte* inputSamples = (byte*)inputInterleavedBuffer;
+				byte*[] samples = new byte*[channels];
+				for (int i = 0; i < channels; i++)
+					samples[i] = (byte*)asioOutputBuffers[i];
 
+				// optimized mono to stereo
+				if (nbChannels == 1 && channels == 2)
 					for (int i = 0; i < nbSamples; i++)
 					{
-						leftSamples++;
-						*leftSamples++ = inputSamples[0];
-						*leftSamples++ = inputSamples[1];
-						*leftSamples++ = inputSamples[2];
+						samples[0]++;
+						samples[1]++;
 
-						rightSamples++;
-						*rightSamples++ = inputSamples[3];
-						*rightSamples++ = inputSamples[4];
-						*rightSamples++ = inputSamples[5];
+						var value = *inputSamples++;
+						*samples[0]++ = value;
+						*samples[1]++ = value;
 
-						// Go to next sample
-						inputSamples += 3 * nbChannels;
+						value = *inputSamples++;
+						*samples[0]++ = value;
+						*samples[1]++ = value;
+
+						value = *inputSamples++;
+						*samples[0]++ = value;
+						*samples[1]++ = value;
 					}
-				}
+				// optimized stereo to stereo
+				else if (nbChannels == 2 && channels == 2)
+					for (int i = 0; i < nbSamples; i++)
+					{
+						samples[0]++;
+						*samples[0]++ = *inputSamples++;
+						*samples[0]++ = *inputSamples++;
+						*samples[0]++ = *inputSamples++;
+
+						samples[1]++;
+						*samples[1]++ = *inputSamples++;
+						*samples[1]++ = *inputSamples++;
+						*samples[1]++ = *inputSamples++;
+					}
+				// generic
+				else
+					for (int i = 0; i < nbSamples; i++)
+						for (int j = 0; j < nbChannels; j++)
+						{
+							if (j < channels)
+							{
+								samples[j]++;
+								*samples[j]++ = *inputSamples++;
+								*samples[j]++ = *inputSamples++;
+								*samples[j]++ = *inputSamples++;
+							}
+							else
+								inputSamples += 3;
+						}
 			}
-        }
-
-        /// <summary>
-        /// Optimized convertor for 2 channels SHORT
-        /// </summary>
-        public static void ConvertorShortToInt2Channels(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
-        {
-            unsafe
-            {
-                short* inputSamples = (short*)inputInterleavedBuffer;
-                // Use a trick (short instead of int to avoid any convertion from 16Bit to 32Bit)
-                short* leftSamples = (short*)asioOutputBuffers[0];
-                short* rightSamples = (short*)asioOutputBuffers[1];
-
-                // Point to upper 16 bits of the 32Bits.
-                for (int i = 0; i < nbSamples; i++)
-                {
-                    leftSamples++;
-                    rightSamples++;
-                    *leftSamples++ = inputSamples[0];
-                    *rightSamples++ = inputSamples[1];
-                    // Go to next sample
-                    inputSamples += 2;
-                }
-            }
         }
 
         /// <summary>
@@ -271,24 +277,48 @@ namespace NAudio.Wave.Asio
         {
             unsafe
             {
-                short* inputSamples = (short*)inputInterleavedBuffer;
-                // Use a trick (short instead of int to avoid any convertion from 16Bit to 32Bit)
-                short*[] samples = new short*[nbChannels];
-                for (int i = 0; i < nbChannels; i++)
+				int channels = asioOutputBuffers.Length;
+				short* inputSamples = (short*)inputInterleavedBuffer;
+				// Use a trick (short instead of int to avoid any convertion from 16Bit to 32Bit)
+                short*[] samples = new short*[channels];
+                for (int i = 0; i < channels; i++)
                 {
                     samples[i] = (short*)asioOutputBuffers[i];
                     // Point to upper 16 bits of the 32Bits.
                     samples[i]++;
                 }
 
-                for (int i = 0; i < nbSamples; i++)
-                {
-                    for (int j = 0; j < nbChannels; j++)
-                    {
-                        *samples[j] = *inputSamples++;
-                        samples[j] += 2;
-                    }
-                }
+				// optimized mono to stereo
+				if (nbChannels == 1 && channels == 2)
+					for (int i = 0; i < nbSamples; i++)
+					{
+						var value = *inputSamples++;
+						*samples[0] = value;
+						samples[0] += 2;
+						*samples[1] = value;
+						samples[1] += 2;
+					}
+				// optimized stereo to stereo
+				else if (nbChannels == 2 && channels == 2)
+					for (int i = 0; i < nbSamples; i++)
+					{
+						*samples[0] = *inputSamples++;
+						samples[0] += 2;
+						*samples[1] = *inputSamples++;
+						samples[1] += 2;
+					}
+				// generic
+				else
+					for (int i = 0; i < nbSamples; i++)
+						for (int j = 0; j < nbChannels; j++)
+						{
+							var value = *inputSamples++;
+							if (j < channels)
+							{
+								*samples[j] = value;
+								samples[j] += 2;
+							}
+						}
             }
         }
 

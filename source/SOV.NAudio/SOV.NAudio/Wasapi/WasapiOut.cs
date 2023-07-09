@@ -390,6 +390,9 @@ namespace NAudio.Wave
             var prevOutputWaveFormat = OutputWaveFormat;
             OutputWaveFormat = waveProvider.WaveFormat;
 
+			//if (OutputWaveFormat.Encoding == WaveFormatEncoding.DSD)
+			//	OutputWaveFormat = new WaveFormat(OutputWaveFormat.SampleRate / 16, 24, OutputWaveFormat.Channels);
+
             // allow auto sample rate conversion - works for shared mode
             var flags = AudioClientStreamFlags.AutoConvertPcm | AudioClientStreamFlags.SrcDefaultQuality;
             sourceProvider = waveProvider;

@@ -247,7 +247,7 @@ namespace NAudio.Wave
             }
 
 			var previousWaveFormat = sourceWaveFormat;
-
+			var outChannels = NumberOfOutputChannels = waveProvider.WaveFormat.Channels;
 			int desiredSampleRate = waveProvider != null ? waveProvider.WaveFormat.SampleRate : recordOnlySampleRate;
 			int bitsPerSample = waveProvider.WaveFormat.BitsPerSample;
 			if (!driver.IsSampleRateSupported(desiredSampleRate))
@@ -257,7 +257,6 @@ namespace NAudio.Wave
             {
                 sourceStream = waveProvider;
                 sourceWaveFormat = waveProvider.WaveFormat;
-                NumberOfOutputChannels = waveProvider.WaveFormat.Channels;
 
 				// check dsd native
 				try
@@ -285,7 +284,8 @@ namespace NAudio.Wave
 
 				// Select the correct sample convertor from WaveFormat -> ASIOFormat
 				var asioSampleType = driver.Capabilities.OutputChannelInfos[0].type;
-				var outChannels = waveProvider.WaveFormat.Channels > driver.Capabilities.NbOutputChannels ? driver.Capabilities.NbOutputChannels : waveProvider.WaveFormat.Channels;
+				outChannels = NumberOfOutputChannels > driver.Capabilities.NbOutputChannels ? driver.Capabilities.NbOutputChannels :
+					NumberOfOutputChannels == 1 ? 2 : NumberOfOutputChannels;
 				convertor = AsioSampleConvertor.SelectSampleConvertor(waveProvider.WaveFormat, asioSampleType);
 
 				switch (asioSampleType)
@@ -342,8 +342,7 @@ namespace NAudio.Wave
                 NumberOfInputChannels = recordChannels;
 
                 // Used Prefered size of ASIO Buffer
-                nbSamples = driver.CreateBuffers(driver.Capabilities.NbOutputChannels < NumberOfOutputChannels ? driver.Capabilities.NbOutputChannels : NumberOfOutputChannels,
-					NumberOfInputChannels, false);
+                nbSamples = driver.CreateBuffers(outChannels, NumberOfInputChannels, false);
                 driver.SetChannelOffset(ChannelOffset, InputChannelOffset); // will throw an exception if channel offset is too high
             }
 
