@@ -38,7 +38,6 @@
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacMetaDataType.cs" Link="Flac\FlacMetaDataType.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacNumberType.cs" Link="Flac\FlacNumberType.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacPartitionedRice.cs" Link="Flac\FlacPartitionedRice.cs" />
-    <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacPartitionedRiceContent.cs" Link="Flac\FlacPartitionedRiceContent.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacPreScan.cs" Link="Flac\FlacPreScan.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacPreScanFinishedEventArgs.cs" Link="Flac\FlacPreScanFinishedEventArgs.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacPreScanMethodMode.cs" Link="Flac\FlacPreScanMethodMode.cs" />
