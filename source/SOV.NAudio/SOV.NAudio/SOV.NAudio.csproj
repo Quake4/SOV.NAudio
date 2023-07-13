@@ -22,6 +22,7 @@
   <ItemGroup>
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\BitReader.cs" Link="Flac\Base\BitReader.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\ChannelAssignment.cs" Link="Flac\ChannelAssignment.cs" />
+    <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\CRC16.cs" Link="Flac\CRC16.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\CRC8.cs" Link="Flac\CRC8.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\CRCBase.cs" Link="Flac\Base\CRCBase.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacBitReader.cs" Link="Flac\FlacBitReader.cs" />
@@ -41,6 +42,7 @@
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacPreScan.cs" Link="Flac\FlacPreScan.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacPreScanFinishedEventArgs.cs" Link="Flac\FlacPreScanFinishedEventArgs.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacPreScanMethodMode.cs" Link="Flac\FlacPreScanMethodMode.cs" />
+    <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacReader.cs" Link="Flac\FlacReader.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacResidual.cs" Link="Flac\FlacResidual.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacSeekPoint.cs" Link="Flac\FlacSeekPoint.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacSubFrameBase.cs" Link="Flac\FlacSubFrameBase.cs" />
