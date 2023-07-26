@@ -12,14 +12,14 @@ namespace SOV.NAudio
 {
 	public class TrackInfo
 	{
-		public int Number;
+		public byte Number;
 		public string Title;
 		public string Performer;
 	}
 
 	public class FileInfo
 	{
-		public int Year;
+		public short Year;
 		public string Title;
 		public string Artist;
 	}
@@ -28,6 +28,6 @@ namespace SOV.NAudio
 	{
 		FileInfo FileInfo { get; }
 		TrackInfo TrackInfo { get; }
-		int TrackCount { get; }
+		byte TrackCount { get; }
 	}
 }
