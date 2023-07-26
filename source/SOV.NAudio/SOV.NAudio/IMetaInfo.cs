@@ -20,6 +20,7 @@ namespace SOV.NAudio
 	public class FileInfo
 	{
 		public short Year;
+		public short YearPublish;
 		public string Title;
 		public string Artist;
 	}
