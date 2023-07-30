@@ -346,9 +346,13 @@ namespace NAudio.Wave
                 driver.SetChannelOffset(ChannelOffset, InputChannelOffset); // will throw an exception if channel offset is too high
             }
 
-            if (waveProvider != null)
-                // make a buffer big enough to read enough from the sourceStream to fill the ASIO buffers
-                waveBuffer = new byte[nbSamples * NumberOfOutputChannels * bitsPerSample / 8];
+			if (waveProvider != null)
+			{
+				// make a buffer big enough to read enough from the sourceStream to fill the ASIO buffers
+				var lenght = nbSamples * NumberOfOutputChannels * bitsPerSample / 8;
+				if (waveBuffer == null || waveBuffer.Length != lenght)
+					waveBuffer = new byte[lenght];
+			}
 
             isInitialized = true;
         }
