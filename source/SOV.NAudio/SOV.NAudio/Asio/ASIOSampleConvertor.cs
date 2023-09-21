@@ -219,6 +219,7 @@ namespace NAudio.Wave.Asio
 				for (int i = 0; i < channels; i++)
 					samples[i] = (byte*)asioOutputBuffers[i];
 
+				byte value;
 				// optimized mono to stereo
 				if (nbChannels == 1 && channels == 2)
 					for (int i = 0; i < nbSamples; i++)
@@ -226,7 +227,7 @@ namespace NAudio.Wave.Asio
 						samples[0]++;
 						samples[1]++;
 
-						var value = *inputSamples++;
+						value = *inputSamples++;
 						*samples[0]++ = value;
 						*samples[1]++ = value;
 
@@ -288,11 +289,12 @@ namespace NAudio.Wave.Asio
                     samples[i]++;
                 }
 
+				short value;
 				// optimized mono to stereo
 				if (nbChannels == 1 && channels == 2)
 					for (int i = 0; i < nbSamples; i++)
 					{
-						var value = *inputSamples++;
+						value = *inputSamples++;
 						*samples[0] = value;
 						samples[0] += 2;
 						*samples[1] = value;
@@ -312,7 +314,7 @@ namespace NAudio.Wave.Asio
 					for (int i = 0; i < nbSamples; i++)
 						for (int j = 0; j < nbChannels; j++)
 						{
-							var value = *inputSamples++;
+							value = *inputSamples++;
 							if (j < channels)
 							{
 								*samples[j] = value;
