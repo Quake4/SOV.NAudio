@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <Copyright>© 2023 Oleg Samsonov, Mark Heath</Copyright>
     <RepositoryUrl>https://github.com/Quake4/SOV.NAudio</RepositoryUrl>
