@@ -249,7 +249,7 @@ namespace NAudio.Wave
 			var previousWaveFormat = sourceWaveFormat;
 			var outChannels = NumberOfOutputChannels = waveProvider.WaveFormat.Channels;
 			int desiredSampleRate = waveProvider != null ? waveProvider.WaveFormat.SampleRate : recordOnlySampleRate;
-			int bitsPerSample = (waveProvider.WaveFormat.BitsPerSample + 7) / 8 * 8; // align to bytes
+			int bitsPerSample = waveProvider.WaveFormat.BitsPerSample == 1 ? 1 : (waveProvider.WaveFormat.BitsPerSample + 7) / 8 * 8; // align to bytes
 			if (!driver.IsSampleRateSupported(desiredSampleRate))
 				throw new ArgumentException($"Desired SampleRate {desiredSampleRate} is not supported.");
 
