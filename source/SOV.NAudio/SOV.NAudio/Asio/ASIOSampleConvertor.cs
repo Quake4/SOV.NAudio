@@ -16,18 +16,19 @@ namespace NAudio.Wave.Asio
         /// <param name="waveFormat">The wave format.</param>
         /// <param name="asioType">The type.</param>
         /// <returns></returns>
-        public static SampleConvertor SelectSampleConvertor(WaveFormat waveFormat, AsioSampleType asioType)
+        public static SampleConvertor SelectSampleConvertor(WaveFormat waveFormat, int alignedBits, AsioSampleType asioType)
         {
             SampleConvertor convertor = null;
             bool is2Channels = waveFormat.Channels == 2;
+			alignedBits = waveFormat.BitsPerSample == 1 ? 1 : alignedBits;
 
-            var exception = $"Not a supported conversion {asioType} for {waveFormat}.";
+			var exception = $"Not a supported conversion {asioType} for {waveFormat}.";
 
 			// TODO : IMPLEMENTS OTHER CONVERTOR TYPES
 			switch (asioType)
 			{
 				case AsioSampleType.DSDInt8MSB1:
-					switch (waveFormat.BitsPerSample)
+					switch (alignedBits)
 					{
 						case 1:
 							convertor = ConvertorDsdToByteGeneric;
@@ -35,7 +36,7 @@ namespace NAudio.Wave.Asio
 					}
 					break;
 				case AsioSampleType.Int32LSB:
-                    switch (waveFormat.BitsPerSample)
+                    switch (alignedBits)
                     {
 						case 1:
 							convertor = ConvertorDsdToDop32;
@@ -43,7 +44,7 @@ namespace NAudio.Wave.Asio
 						case 16:
                             convertor = ConvertorShortToIntGeneric;
                             break;
-                        case 24:
+						case 24:
                             convertor = Convertor24ToIntGeneric;
                             break;
                         case 32:
@@ -55,7 +56,7 @@ namespace NAudio.Wave.Asio
                     }
                     break;
                 case AsioSampleType.Int16LSB:
-                    switch (waveFormat.BitsPerSample)
+                    switch (alignedBits)
                     {
                         case 16:
                             convertor = (is2Channels) ? (SampleConvertor)ConvertorShortToShort2Channels : (SampleConvertor)ConvertorShortToShortGeneric;
@@ -69,7 +70,7 @@ namespace NAudio.Wave.Asio
                     }
                     break;
                 case AsioSampleType.Int24LSB:
-                    switch (waveFormat.BitsPerSample)
+                    switch (alignedBits)
                     {
 						case 1:
 							convertor = ConvertorDsdToDop24;
@@ -85,7 +86,7 @@ namespace NAudio.Wave.Asio
                     }
                     break;
                 case AsioSampleType.Float32LSB:
-                    switch (waveFormat.BitsPerSample)
+                    switch (alignedBits)
                     {
                         case 16:
                             throw new ArgumentException(exception);
