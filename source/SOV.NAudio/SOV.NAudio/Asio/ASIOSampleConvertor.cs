@@ -16,11 +16,10 @@ namespace NAudio.Wave.Asio
         /// <param name="waveFormat">The wave format.</param>
         /// <param name="asioType">The type.</param>
         /// <returns></returns>
-        public static SampleConvertor SelectSampleConvertor(WaveFormat waveFormat, int alignedBits, AsioSampleType asioType)
+        public static SampleConvertor SelectSampleConvertor(WaveFormat waveFormat, AsioSampleType asioType)
         {
             SampleConvertor convertor = null;
             bool is2Channels = waveFormat.Channels == 2;
-			alignedBits = waveFormat.BitsPerSample == 1 ? 1 : alignedBits;
 
 			var exception = $"Not a supported conversion {asioType} for {waveFormat}.";
 
@@ -28,7 +27,7 @@ namespace NAudio.Wave.Asio
 			switch (asioType)
 			{
 				case AsioSampleType.DSDInt8MSB1:
-					switch (alignedBits)
+					switch (waveFormat.BitsPerSample)
 					{
 						case 1:
 							convertor = ConvertorDsdToByteGeneric;
@@ -36,7 +35,7 @@ namespace NAudio.Wave.Asio
 					}
 					break;
 				case AsioSampleType.Int32LSB:
-                    switch (alignedBits)
+                    switch (waveFormat.BitsPerSample)
                     {
 						case 1:
 							convertor = ConvertorDsdToDop32;
@@ -56,7 +55,7 @@ namespace NAudio.Wave.Asio
                     }
                     break;
                 case AsioSampleType.Int16LSB:
-                    switch (alignedBits)
+                    switch (waveFormat.BitsPerSample)
                     {
                         case 16:
                             convertor = (is2Channels) ? (SampleConvertor)ConvertorShortToShort2Channels : (SampleConvertor)ConvertorShortToShortGeneric;
@@ -70,7 +69,7 @@ namespace NAudio.Wave.Asio
                     }
                     break;
                 case AsioSampleType.Int24LSB:
-                    switch (alignedBits)
+                    switch (waveFormat.BitsPerSample)
                     {
 						case 1:
 							convertor = ConvertorDsdToDop24;
@@ -86,7 +85,7 @@ namespace NAudio.Wave.Asio
                     }
                     break;
                 case AsioSampleType.Float32LSB:
-                    switch (alignedBits)
+                    switch (waveFormat.BitsPerSample)
                     {
                         case 16:
                             throw new ArgumentException(exception);

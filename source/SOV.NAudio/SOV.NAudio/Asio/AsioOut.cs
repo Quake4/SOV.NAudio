@@ -188,7 +188,7 @@ namespace NAudio.Wave
         /// </summary>
         public void ShowControlPanel()
         {
-            driver.ShowControlPanel();
+			driver.ShowControlPanel();
         }
 
         /// <summary>
@@ -249,7 +249,7 @@ namespace NAudio.Wave
 			var previousWaveFormat = sourceWaveFormat;
 			var outChannels = NumberOfOutputChannels = waveProvider.WaveFormat.Channels;
 			int desiredSampleRate = waveProvider != null ? waveProvider.WaveFormat.SampleRate : recordOnlySampleRate;
-			int bitsPerSample = waveProvider.WaveFormat.BitsPerSample == 1 ? 1 : (waveProvider.WaveFormat.BitsPerSample + 7) / 8 * 8; // align to bytes
+			int bitsPerSample = waveProvider.WaveFormat.BitsPerSample;
 			if (!driver.IsSampleRateSupported(desiredSampleRate))
 				throw new ArgumentException($"Desired SampleRate {desiredSampleRate} is not supported.");
 
@@ -286,7 +286,7 @@ namespace NAudio.Wave
 				var asioSampleType = driver.Capabilities.OutputChannelInfos[0].type;
 				outChannels = NumberOfOutputChannels > driver.Capabilities.NbOutputChannels ? driver.Capabilities.NbOutputChannels :
 					NumberOfOutputChannels == 1 ? 2 : NumberOfOutputChannels;
-				convertor = AsioSampleConvertor.SelectSampleConvertor(waveProvider.WaveFormat, bitsPerSample, asioSampleType);
+				convertor = AsioSampleConvertor.SelectSampleConvertor(waveProvider.WaveFormat, asioSampleType);
 
 				switch (asioSampleType)
 				{
