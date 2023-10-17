@@ -30,6 +30,7 @@
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacEntropyCoding.cs" Link="Flac\FlacEntropyCoding.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacException.cs" Link="Flac\FlacException.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacFrame.cs" Link="Flac\FlacFrame.cs" />
+    <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacFrameBuffer.cs" Link="Flac\FlacFrameBuffer.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacFrameHeader.cs" Link="Flac\FlacFrameHeader.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacFrameInformation.cs" Link="Flac\FlacFrameInformation.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacLayer.cs" Link="Flac\FlacLayer.cs" />
