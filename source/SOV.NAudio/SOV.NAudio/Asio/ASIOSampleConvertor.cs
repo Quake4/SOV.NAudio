@@ -225,11 +225,11 @@ namespace NAudio.Wave.Asio
 
 				byte value;
 				// optimized mono to stereo
-				if (nbChannels == 1 && channels == 2)
+				if (nbChannels == 1 && channels >= 2)
 					for (int i = 0; i < nbSamples; i++)
 					{
-						samples[0]++;
-						samples[1]++;
+						*samples[0]++ = 0;
+						*samples[1]++ = 0;
 
 						value = *inputSamples++;
 						*samples[0]++ = value;
@@ -247,12 +247,12 @@ namespace NAudio.Wave.Asio
 				else if (nbChannels == 2 && channels == 2)
 					for (int i = 0; i < nbSamples; i++)
 					{
-						samples[0]++;
+						*samples[0]++ = 0;
 						*samples[0]++ = *inputSamples++;
 						*samples[0]++ = *inputSamples++;
 						*samples[0]++ = *inputSamples++;
 
-						samples[1]++;
+						*samples[1]++ = 0;
 						*samples[1]++ = *inputSamples++;
 						*samples[1]++ = *inputSamples++;
 						*samples[1]++ = *inputSamples++;
@@ -260,17 +260,24 @@ namespace NAudio.Wave.Asio
 				// generic
 				else
 					for (int i = 0; i < nbSamples; i++)
-						for (int j = 0; j < nbChannels; j++)
+						for (int j = 0; j < Math.Max(nbChannels, channels); j++)
 						{
-							if (j < channels)
+							if (j < Math.Min(nbChannels, channels))
 							{
-								samples[j]++;
+								*samples[j]++ = 0;
 								*samples[j]++ = *inputSamples++;
 								*samples[j]++ = *inputSamples++;
 								*samples[j]++ = *inputSamples++;
 							}
-							else
+							else if (j >= channels)
 								inputSamples += 3;
+							if (j >= nbChannels)
+							{
+								*samples[j]++ = 0;
+								*samples[j]++ = 0;
+								*samples[j]++ = 0;
+								*samples[j]++ = 0;
+							}
 						}
 			}
         }
@@ -287,11 +294,11 @@ namespace NAudio.Wave.Asio
 
 				byte value;
 				// optimized mono to stereo
-				if (nbChannels == 1 && channels == 2)
+				if (nbChannels == 1 && channels >= 2)
 					for (int i = 0; i < nbSamples; i++)
 					{
-						samples[0]++;
-						samples[1]++;
+						*samples[0]++ = 0;
+						*samples[1]++ = 0;
 
 						value = *inputSamples++;
 						*samples[0]++ = value;
@@ -305,27 +312,33 @@ namespace NAudio.Wave.Asio
 				else if (nbChannels == 2 && channels == 2)
 					for (int i = 0; i < nbSamples; i++)
 					{
-						samples[0]++;
+						*samples[0]++ = 0;
 						*samples[0]++ = *inputSamples++;
 						*samples[0]++ = *inputSamples++;
 
-						samples[1]++;
+						*samples[1]++ = 0;
 						*samples[1]++ = *inputSamples++;
 						*samples[1]++ = *inputSamples++;
 					}
 				// generic
 				else
 					for (int i = 0; i < nbSamples; i++)
-						for (int j = 0; j < nbChannels; j++)
+						for (int j = 0; j < Math.Max(nbChannels, channels); j++)
 						{
-							if (j < channels)
+							if (j < Math.Min(nbChannels, channels))
 							{
-								samples[j]++;
+								*samples[j]++ = 0;
 								*samples[j]++ = *inputSamples++;
 								*samples[j]++ = *inputSamples++;
 							}
-							else
+							else if (j >= channels)
 								inputSamples += 2;
+							if (j >= nbChannels)
+							{
+								*samples[j]++ = 0;
+								*samples[j]++ = 0;
+								*samples[j]++ = 0;
+							}
 						}
 			}
 		}
@@ -342,7 +355,7 @@ namespace NAudio.Wave.Asio
 
 				byte value;
 				// optimized mono to stereo
-				if (nbChannels == 1 && channels == 2)
+				if (nbChannels == 1 && channels >= 2)
 					for (int i = 0; i < nbSamples; i++)
 					{
 						value = *inputSamples++;
@@ -372,16 +385,22 @@ namespace NAudio.Wave.Asio
 				// generic
 				else
 					for (int i = 0; i < nbSamples; i++)
-						for (int j = 0; j < nbChannels; j++)
+						for (int j = 0; j < Math.Max(nbChannels, channels); j++)
 						{
-							if (j < channels)
+							if (j < Math.Min(nbChannels, channels))
 							{
 								*samples[j]++ = *inputSamples++;
 								*samples[j]++ = *inputSamples++;
 								*samples[j]++ = *inputSamples++;
 							}
-							else
+							else if (j >= channels)
 								inputSamples += 3;
+							if (j >= nbChannels)
+							{
+								*samples[j]++ = 0;
+								*samples[j]++ = 0;
+								*samples[j]++ = 0;
+							}
 						}
 			}
 		}
@@ -398,7 +417,7 @@ namespace NAudio.Wave.Asio
 
 				byte value;
 				// optimized mono to stereo
-				if (nbChannels == 1 && channels == 2)
+				if (nbChannels == 1 && channels >= 2)
 					for (int i = 0; i < nbSamples; i++)
 					{
 						inputSamples++;
@@ -432,17 +451,23 @@ namespace NAudio.Wave.Asio
 				// generic
 				else
 					for (int i = 0; i < nbSamples; i++)
-						for (int j = 0; j < nbChannels; j++)
+						for (int j = 0; j < Math.Max(nbChannels, channels); j++)
 						{
-							if (j < channels)
+							if (j < Math.Min(nbChannels, channels))
 							{
 								inputSamples++;
 								*samples[j]++ = *inputSamples++;
 								*samples[j]++ = *inputSamples++;
 								*samples[j]++ = *inputSamples++;
 							}
-							else
+							else if (j >= channels)
 								inputSamples += 4;
+							if (j >= nbChannels)
+							{
+								*samples[j]++ = 0;
+								*samples[j]++ = 0;
+								*samples[j]++ = 0;
+							}
 						}
 			}
 		}
@@ -468,7 +493,7 @@ namespace NAudio.Wave.Asio
 
 				short value;
 				// optimized mono to stereo
-				if (nbChannels == 1 && channels == 2)
+				if (nbChannels == 1 && channels >= 2)
 					for (int i = 0; i < nbSamples; i++)
 					{
 						value = *inputSamples++;
