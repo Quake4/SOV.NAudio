@@ -75,12 +75,16 @@ namespace NAudio.Wave.Asio
 							convertor = ConvertorDsdToDop24;
 							break;
 						case 16:
-                            throw new ArgumentException(exception);
-                        case 32:
+							convertor = Convertor16To24Generic;
+							break;
+						case 24:
+							convertor = Convertor24To24Generic;
+							break;
+						case 32:
                             if (waveFormat.Encoding == WaveFormatEncoding.IeeeFloat)
                                 convertor = ConverterFloatTo24LSBGeneric;
                             else
-                                throw new ArgumentException(exception);
+								convertor = ConvertorIntTo24Generic;
                             break;
                     }
                     break;
@@ -271,10 +275,183 @@ namespace NAudio.Wave.Asio
 			}
         }
 
-        /// <summary>
-        /// Generic convertor for SHORT
-        /// </summary>
-        public static void ConvertorShortToIntGeneric(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
+		public static void Convertor16To24Generic(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
+		{
+			unsafe
+			{
+				int channels = asioOutputBuffers.Length;
+				byte* inputSamples = (byte*)inputInterleavedBuffer;
+				byte*[] samples = new byte*[channels];
+				for (int i = 0; i < channels; i++)
+					samples[i] = (byte*)asioOutputBuffers[i];
+
+				byte value;
+				// optimized mono to stereo
+				if (nbChannels == 1 && channels == 2)
+					for (int i = 0; i < nbSamples; i++)
+					{
+						samples[0]++;
+						samples[1]++;
+
+						value = *inputSamples++;
+						*samples[0]++ = value;
+						*samples[1]++ = value;
+
+						value = *inputSamples++;
+						*samples[0]++ = value;
+						*samples[1]++ = value;
+					}
+				// optimized stereo to stereo
+				else if (nbChannels == 2 && channels == 2)
+					for (int i = 0; i < nbSamples; i++)
+					{
+						samples[0]++;
+						*samples[0]++ = *inputSamples++;
+						*samples[0]++ = *inputSamples++;
+
+						samples[1]++;
+						*samples[1]++ = *inputSamples++;
+						*samples[1]++ = *inputSamples++;
+					}
+				// generic
+				else
+					for (int i = 0; i < nbSamples; i++)
+						for (int j = 0; j < nbChannels; j++)
+						{
+							if (j < channels)
+							{
+								samples[j]++;
+								*samples[j]++ = *inputSamples++;
+								*samples[j]++ = *inputSamples++;
+							}
+							else
+								inputSamples += 2;
+						}
+			}
+		}
+
+		public static void Convertor24To24Generic(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
+		{
+			unsafe
+			{
+				int channels = asioOutputBuffers.Length;
+				byte* inputSamples = (byte*)inputInterleavedBuffer;
+				byte*[] samples = new byte*[channels];
+				for (int i = 0; i < channels; i++)
+					samples[i] = (byte*)asioOutputBuffers[i];
+
+				byte value;
+				// optimized mono to stereo
+				if (nbChannels == 1 && channels == 2)
+					for (int i = 0; i < nbSamples; i++)
+					{
+						value = *inputSamples++;
+						*samples[0]++ = value;
+						*samples[1]++ = value;
+
+						value = *inputSamples++;
+						*samples[0]++ = value;
+						*samples[1]++ = value;
+
+						value = *inputSamples++;
+						*samples[0]++ = value;
+						*samples[1]++ = value;
+					}
+				// optimized stereo to stereo
+				else if (nbChannels == 2 && channels == 2)
+					for (int i = 0; i < nbSamples; i++)
+					{
+						*samples[0]++ = *inputSamples++;
+						*samples[0]++ = *inputSamples++;
+						*samples[0]++ = *inputSamples++;
+
+						*samples[1]++ = *inputSamples++;
+						*samples[1]++ = *inputSamples++;
+						*samples[1]++ = *inputSamples++;
+					}
+				// generic
+				else
+					for (int i = 0; i < nbSamples; i++)
+						for (int j = 0; j < nbChannels; j++)
+						{
+							if (j < channels)
+							{
+								*samples[j]++ = *inputSamples++;
+								*samples[j]++ = *inputSamples++;
+								*samples[j]++ = *inputSamples++;
+							}
+							else
+								inputSamples += 3;
+						}
+			}
+		}
+
+		public static void ConvertorIntTo24Generic(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
+		{
+			unsafe
+			{
+				int channels = asioOutputBuffers.Length;
+				byte* inputSamples = (byte*)inputInterleavedBuffer;
+				byte*[] samples = new byte*[channels];
+				for (int i = 0; i < channels; i++)
+					samples[i] = (byte*)asioOutputBuffers[i];
+
+				byte value;
+				// optimized mono to stereo
+				if (nbChannels == 1 && channels == 2)
+					for (int i = 0; i < nbSamples; i++)
+					{
+						inputSamples++;
+
+						value = *inputSamples++;
+						*samples[0]++ = value;
+						*samples[1]++ = value;
+
+						value = *inputSamples++;
+						*samples[0]++ = value;
+						*samples[1]++ = value;
+
+						value = *inputSamples++;
+						*samples[0]++ = value;
+						*samples[1]++ = value;
+					}
+				// optimized stereo to stereo
+				else if (nbChannels == 2 && channels == 2)
+					for (int i = 0; i < nbSamples; i++)
+					{
+						inputSamples++;
+						*samples[0]++ = *inputSamples++;
+						*samples[0]++ = *inputSamples++;
+						*samples[0]++ = *inputSamples++;
+
+						inputSamples++;
+						*samples[1]++ = *inputSamples++;
+						*samples[1]++ = *inputSamples++;
+						*samples[1]++ = *inputSamples++;
+					}
+				// generic
+				else
+					for (int i = 0; i < nbSamples; i++)
+						for (int j = 0; j < nbChannels; j++)
+						{
+							if (j < channels)
+							{
+								inputSamples++;
+								*samples[j]++ = *inputSamples++;
+								*samples[j]++ = *inputSamples++;
+								*samples[j]++ = *inputSamples++;
+							}
+							else
+								inputSamples += 4;
+						}
+			}
+		}
+
+
+		/// <summary>
+		/// Generic convertor for SHORT
+		/// </summary>
+		public static void ConvertorShortToIntGeneric(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
         {
             unsafe
             {
@@ -425,8 +602,8 @@ namespace NAudio.Wave.Asio
 
                 for (int i = 0; i < nbSamples; i++)
                 {
-                    *leftSamples++ = (short)(inputSamples[0] / (1 << 16));
-                    *rightSamples++ = (short)(inputSamples[1] / (1 << 16));
+                    *leftSamples++ = (short)(inputSamples[0] >> 16);
+                    *rightSamples++ = (short)(inputSamples[1] >> 16);
                     inputSamples += 2;
                 }
             }
@@ -450,7 +627,7 @@ namespace NAudio.Wave.Asio
                 {
                     for (int j = 0; j < nbChannels; j++)
                     {
-                        *samples[j]++ = (short)(*inputSamples++ / (1 << 16));
+                        *samples[j]++ = (short)(*inputSamples++ >> 16);
                     }
                 }
             }
