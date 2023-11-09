@@ -341,8 +341,7 @@ namespace NAudio.Wave
 					{
 						if (waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD)
 							throw new ArgumentException($"Desired DSD sample rate '{desiredSampleRate}' is not supported.");
-
-						if (waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD)
+						else
 						{
 							// try resampler for pcm
 							while (!dmoResamplerUsed && (desiredSampleRate >>= 1) >= 44100)
@@ -360,13 +359,12 @@ namespace NAudio.Wave
 								}
 
 							if (!dmoResamplerUsed)
-								throw new ArgumentException($"Desired PCM sample rate '{desiredSampleRate}' is not supported.");
+								throw new ArgumentException($"Desired PCM sample rate '{waveProvider.WaveFormat.SampleRate}' is not supported.");
 						}
 					}
 				}
 				catch (Exception ex)
 				{
-					System.Diagnostics.Debug.WriteLine($"DSD Native isn't found! " + ex.Message);
 					if (neededAsioMode() == WaveFormatEncoding.DSD)
 					{
 						desiredSampleRate = waveProvider.WaveFormat.SampleRate / 16;
@@ -385,8 +383,10 @@ namespace NAudio.Wave
 						}
 
 						if (!CheckAndSetSampleRate(desiredSampleRate, false, false))
-							throw new ArgumentException($"Desired DoP sample rate '{desiredSampleRate}' is not supported.");
+							throw new ArgumentException(ex.Message + $" Desired DoP sample rate '{desiredSampleRate}' is not supported.");
 					}
+					else
+						throw;
 				}
 
 				// Select the correct sample convertor from WaveFormat -> ASIOFormat
