@@ -1,22 +1,24 @@
-﻿using System;
-using NAudio.Wave.Asio;
+﻿using NAudio.Wave.Asio;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace NAudio.Wave
 {
-    /// <summary>
-    /// ASIO Out Player. New implementation using an internal C# binding.
-    /// 
-    /// This implementation is only supporting Short16Bit and Float32Bit formats and is optimized 
-    /// for 2 outputs channels .
-    /// SampleRate is supported only if AsioDriver is supporting it
-    ///     
-    /// This implementation is probably the first AsioDriver binding fully implemented in C#!
-    /// 
-    /// Original Contributor: Mark Heath 
-    /// New Contributor to C# binding : Alexandre Mutel - email: alexandre_mutel at yahoo.fr
-    /// </summary>
-    public class AsioOut : IWavePlayer
+	/// <summary>
+	/// ASIO Out Player. New implementation using an internal C# binding.
+	/// 
+	/// This implementation is only supporting Short16Bit and Float32Bit formats and is optimized 
+	/// for 2 outputs channels .
+	/// SampleRate is supported only if AsioDriver is supporting it
+	///     
+	/// This implementation is probably the first AsioDriver binding fully implemented in C#!
+	/// 
+	/// Original Contributor: Mark Heath 
+	/// New Contributor to C# binding : Alexandre Mutel - email: alexandre_mutel at yahoo.fr
+	/// </summary>
+	public class AsioOut : IWavePlayer
     {
         private AsioDriverExt driver;
         private IWaveProvider sourceStream;
@@ -31,10 +33,15 @@ namespace NAudio.Wave
         private bool isInitialized;
 		private bool isSendStop;
 
-        /// <summary>
-        /// Playback Stopped
-        /// </summary>
-        public event EventHandler<StoppedEventArgs> PlaybackStopped;
+		protected bool dmoResamplerUsed;
+		protected WaveFormat dmoResamplerFormat;
+		protected ResamplerDmoStream dmoResampler;
+		protected IList<int> blaskListedSampleRates = new List<int>();
+
+		/// <summary>
+		/// Playback Stopped
+		/// </summary>
+		public event EventHandler<StoppedEventArgs> PlaybackStopped;
 
         /// <summary>
         /// When recording, fires whenever recorded audio is available
@@ -241,10 +248,18 @@ namespace NAudio.Wave
         /// <param name="recordOnlySampleRate">Specify sample rate here if only recording, ignored otherwise</param>
         public void InitRecordAndPlayback(IWaveProvider waveProvider, int recordChannels, int recordOnlySampleRate)
         {
-            if (waveProvider != null && isInitialized && waveProvider.WaveFormat.ToString() == sourceWaveFormat.ToString())
+			// dispose resampler
+			if (dmoResamplerUsed)
+			{
+				if (dmoResampler != null)
+					dmoResampler.Dispose();
+				dmoResampler = null;
+			}
+
+			if (waveProvider != null && isInitialized && waveProvider.WaveFormat.ToString() == sourceWaveFormat.ToString())
 			{
                 sourceStream = waveProvider;
-                return;
+				return;
             }
 
 			WaveFormatEncoding currentAsioMode() 
@@ -264,11 +279,43 @@ namespace NAudio.Wave
 				return waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD ? WaveFormatEncoding.DSD : WaveFormatEncoding.Pcm;
 			}
 
+			bool CheckAndSetSampleRate(int sampleRate, bool rise = false, bool useblacklist = false)
+			{
+				bool setted = true;
+				if (driver.Capabilities.SampleRate != sampleRate)
+				{
+					try
+					{
+						if (!blaskListedSampleRates.Any(p => p == sampleRate) && driver.IsSampleRateSupported(sampleRate))
+						{
+							driver.SetSampleRate(sampleRate);
+							if (isInitialized)
+							{
+								driver.DisposeBuffers();
+								isInitialized = false;
+							}
+						}
+						else
+							setted = false;
+					}
+					catch
+					{
+						if (useblacklist)
+							blaskListedSampleRates.Add(sampleRate);
+						setted = false;
+						// fix realtek bufferupdate call - reinit as fact
+						driver.SetSampleRate(sampleRate % 44100 == 0 ? 48000 : 44100);
+						if (rise)
+							throw;
+					}
+				}
+				return setted;
+			}
+
 			var outChannels = NumberOfOutputChannels = waveProvider.WaveFormat.Channels;
 			int desiredSampleRate = waveProvider != null ? waveProvider.WaveFormat.SampleRate : recordOnlySampleRate;
 			int bitsPerSample = waveProvider.WaveFormat.BitsPerSample;
-			if (waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD && !driver.IsSampleRateSupported(desiredSampleRate))
-				throw new ArgumentException($"Desired PCM sample rate '{desiredSampleRate}' is not supported.");
+			dmoResamplerUsed = false;
 
 			if (waveProvider != null)
             {
@@ -290,8 +337,32 @@ namespace NAudio.Wave
 						}
 					}
 
-					if (waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD && !driver.IsSampleRateSupported(desiredSampleRate))
-						throw new ArgumentException($"Desired DSD sample rate '{desiredSampleRate}' is not supported.");
+					if (!CheckAndSetSampleRate(desiredSampleRate, false))
+					{
+						if (waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD)
+							throw new ArgumentException($"Desired DSD sample rate '{desiredSampleRate}' is not supported.");
+
+						if (waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD)
+						{
+							// try resampler for pcm
+							while (!dmoResamplerUsed && (desiredSampleRate >>= 1) >= 44100)
+								if (CheckAndSetSampleRate(desiredSampleRate, false))
+								{
+									try
+									{
+										// just check that we can make it.
+										dmoResamplerFormat = new WaveFormat(desiredSampleRate, bitsPerSample, waveProvider.WaveFormat.Channels);
+										dmoResampler = new ResamplerDmoStream(waveProvider, dmoResamplerFormat);
+										dmoResamplerUsed = true;
+										waveProvider = dmoResampler;
+									}
+									catch { }
+								}
+
+							if (!dmoResamplerUsed)
+								throw new ArgumentException($"Desired PCM sample rate '{desiredSampleRate}' is not supported.");
+						}
+					}
 				}
 				catch (Exception ex)
 				{
@@ -313,7 +384,7 @@ namespace NAudio.Wave
 							}
 						}
 
-						if (!driver.IsSampleRateSupported(desiredSampleRate))
+						if (!CheckAndSetSampleRate(desiredSampleRate, false, false))
 							throw new ArgumentException($"Desired DoP sample rate '{desiredSampleRate}' is not supported.");
 					}
 				}
@@ -361,15 +432,7 @@ namespace NAudio.Wave
             else
                 NumberOfOutputChannels = 0;
 
-            if (driver.Capabilities.SampleRate != desiredSampleRate || !isInitialized)
-            {
-				if (isInitialized)
-				{
-					driver.DisposeBuffers();
-					isInitialized = false;
-				}
-				driver.SetSampleRate(desiredSampleRate);
-            }
+			CheckAndSetSampleRate(desiredSampleRate, true);
 
             if (!isInitialized)
             {
@@ -391,6 +454,14 @@ namespace NAudio.Wave
 			}
 
             isInitialized = true;
+
+			//revert, create in bufferupdate
+			if (dmoResamplerUsed == true)
+			{
+				sourceStream = dmoResampler.inputProvider;
+				dmoResampler.Dispose();
+				dmoResampler = null;
+			}
         }
 
         /// <summary>
@@ -400,55 +471,61 @@ namespace NAudio.Wave
         /// <param name="outputChannels">The output channels.</param>
         void driver_BufferUpdate(IntPtr[] inputChannels, IntPtr[] outputChannels)
         {
-            if (this.NumberOfInputChannels > 0)
-            {
-                var audioAvailable = AudioAvailable;
-                if (audioAvailable != null)
-                {
-                    var args = new AsioAudioAvailableEventArgs(inputChannels, outputChannels, nbSamples,
-                                                               driver.Capabilities.InputChannelInfos[0].type);
-                    audioAvailable(this, args);
-                    if (args.WrittenToOutputBuffers)
-                        return;
-                }
-            }
+			if (dmoResamplerUsed && dmoResampler == null)
+			{
+				dmoResampler = new ResamplerDmoStream(sourceStream, dmoResamplerFormat);
+				sourceStream = dmoResampler;
+			}
 
-            if (this.NumberOfOutputChannels > 0)
-            {
-                int read = sourceStream.Read(waveBuffer, 0, waveBuffer.Length);
-                if (read < waveBuffer.Length)
-                {
+			if (this.NumberOfInputChannels > 0)
+			{
+				var audioAvailable = AudioAvailable;
+				if (audioAvailable != null)
+				{
+					var args = new AsioAudioAvailableEventArgs(inputChannels, outputChannels, nbSamples,
+																driver.Capabilities.InputChannelInfos[0].type);
+					audioAvailable(this, args);
+					if (args.WrittenToOutputBuffers)
+						return;
+				}
+			}
+
+			if (this.NumberOfOutputChannels > 0)
+			{
+				int read = sourceStream.Read(waveBuffer, 0, waveBuffer.Length);
+				if (read < waveBuffer.Length)
+				{
 					// we have reached the end of the input data - clear out the end
 					if (OutputWaveFormat.Encoding == WaveFormatEncoding.DSD)
 						for (var i = read; i < waveBuffer.Length; i++)
 							waveBuffer[i] = (byte)0x69;
 					else
 						Array.Clear(waveBuffer, read, waveBuffer.Length - read);
-                }
+				}
 
-                // Call the convertor
-                unsafe
-                {
-                    // TODO : check if it's better to lock the buffer at initialization?
-                    fixed (void* pBuffer = &waveBuffer[0])
-                    {
-                        convertor(new IntPtr(pBuffer), outputChannels, NumberOfOutputChannels, nbSamples);
-                    }
-                }
-				
-                if (read == 0 && !isSendStop)
-                {
+				// Call the convertor
+				unsafe
+				{
+					// TODO : check if it's better to lock the buffer at initialization?
+					fixed (void* pBuffer = &waveBuffer[0])
+					{
+						convertor(new IntPtr(pBuffer), outputChannels, NumberOfOutputChannels, nbSamples);
+					}
+				}
+
+				if (read == 0 && !isSendStop)
+				{
 					isSendStop = true;
 					if (syncContext != null)
 						syncContext.Post(s => Stop(), null);
 					else
 					{
 						var thread = new Thread(() => Stop());
-                        thread.SetApartmentState(ApartmentState.STA);
-                        thread.Start();
-                    }
-                }
-            }
+						thread.SetApartmentState(ApartmentState.STA);
+						thread.Start();
+					}
+				}
+			}
         }
 
         /// <summary>
