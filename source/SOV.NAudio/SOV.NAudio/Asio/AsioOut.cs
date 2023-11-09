@@ -279,14 +279,15 @@ namespace NAudio.Wave
 				return waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD ? WaveFormatEncoding.DSD : WaveFormatEncoding.Pcm;
 			}
 
-			bool CheckAndSetSampleRate(int sampleRate, bool rise = false, bool useblacklist = false)
+			bool CheckAndSetSampleRate(int sampleRate, bool rise = false, bool useblacklist = true)
 			{
 				bool setted = true;
 				if (driver.Capabilities.SampleRate != sampleRate)
 				{
 					try
 					{
-						if (!blaskListedSampleRates.Any(p => p == sampleRate) && driver.IsSampleRateSupported(sampleRate))
+						if ((!useblacklist || useblacklist && !blaskListedSampleRates.Any(p => p == sampleRate)) &&
+							driver.IsSampleRateSupported(sampleRate))
 						{
 							driver.SetSampleRate(sampleRate);
 							if (isInitialized)
@@ -300,11 +301,14 @@ namespace NAudio.Wave
 					}
 					catch
 					{
-						if (useblacklist)
-							blaskListedSampleRates.Add(sampleRate);
 						setted = false;
-						// fix realtek bufferupdate call - reinit as fact
-						driver.SetSampleRate(sampleRate % 44100 == 0 ? 48000 : 44100);
+						if (useblacklist)
+						{
+							blaskListedSampleRates.Add(sampleRate);
+							// fix realtek bufferupdate call - reinit as fact
+							driver.SetSampleRate(sampleRate % 44100 == 0 ? 48000 : 44100);
+							driver.SetSampleRate(sampleRate % 48000 == 0 ? 44100 : 48000);
+						}
 						if (rise)
 							throw;
 					}
@@ -337,7 +341,7 @@ namespace NAudio.Wave
 						}
 					}
 
-					if (!CheckAndSetSampleRate(desiredSampleRate, false))
+					if (!CheckAndSetSampleRate(desiredSampleRate, false, waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD))
 					{
 						if (waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD)
 							throw new ArgumentException($"Desired DSD sample rate '{desiredSampleRate}' is not supported.");
@@ -382,7 +386,7 @@ namespace NAudio.Wave
 							}
 						}
 
-						if (!CheckAndSetSampleRate(desiredSampleRate, false, false))
+						if (!CheckAndSetSampleRate(desiredSampleRate, false))
 							throw new ArgumentException(ex.Message + $" Desired DoP sample rate '{desiredSampleRate}' is not supported.");
 					}
 					else
@@ -432,7 +436,7 @@ namespace NAudio.Wave
             else
                 NumberOfOutputChannels = 0;
 
-			CheckAndSetSampleRate(desiredSampleRate, true);
+			CheckAndSetSampleRate(desiredSampleRate, true, OutputWaveFormat.Encoding != WaveFormatEncoding.DSD);
 
             if (!isInitialized)
             {
