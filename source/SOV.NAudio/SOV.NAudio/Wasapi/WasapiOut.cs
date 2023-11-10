@@ -402,7 +402,8 @@ namespace NAudio.Wave
             {
                 flags = AudioClientStreamFlags.None;
                 var format = new WaveFormatExtensible(OutputWaveFormat.SampleRate, OutputWaveFormat.BitsPerSample, OutputWaveFormat.Channels);
-                if (!audioClient.IsFormatSupported(shareMode, format, out WaveFormatExtensible closestSampleRateFormat))
+				if (!audioClient.IsFormatSupported(shareMode, format, out WaveFormatExtensible closestSampleRateFormat) ||
+					format.ToStandardWaveFormat().Encoding != OutputWaveFormat.Encoding)
                 {
                     // Use closesSampleRateFormat (in sharedMode, it equals usualy to the audioClient.MixFormat)
                     // See documentation : http://msdn.microsoft.com/en-us/library/ms678737(VS.85).aspx 
@@ -438,7 +439,8 @@ namespace NAudio.Wave
                 else
                 {
                     dmoResamplerNeeded = false;
-                }
+					OutputWaveFormat = format.ToStandardWaveFormat();
+				}
             }
 
 			// If using EventSync, setup is specific with shareMode
