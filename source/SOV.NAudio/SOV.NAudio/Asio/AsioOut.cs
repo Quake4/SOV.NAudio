@@ -36,7 +36,7 @@ namespace NAudio.Wave
 		protected bool dmoResamplerUsed;
 		protected WaveFormat dmoResamplerFormat;
 		protected ResamplerDmoStream dmoResampler;
-		protected IList<int> blaskListedSampleRates = new List<int>();
+		protected IList<int> blackListedSampleRates = new List<int>();
 
 		/// <summary>
 		/// Playback Stopped
@@ -279,14 +279,14 @@ namespace NAudio.Wave
 				return waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD ? WaveFormatEncoding.DSD : WaveFormatEncoding.Pcm;
 			}
 
-			bool CheckAndSetSampleRate(int sampleRate, bool rise = false, bool useblacklist = true)
+			bool CheckAndSetSampleRate(int sampleRate, bool rise = false, bool pcm = true)
 			{
 				bool setted = true;
 				if (driver.Capabilities.SampleRate != sampleRate)
 				{
 					try
 					{
-						if ((!useblacklist || useblacklist && !blaskListedSampleRates.Any(p => p == sampleRate)) &&
+						if ((!pcm || pcm && !blackListedSampleRates.Any(p => p == sampleRate)) &&
 							driver.IsSampleRateSupported(sampleRate))
 						{
 							driver.SetSampleRate(sampleRate);
@@ -302,13 +302,22 @@ namespace NAudio.Wave
 					catch
 					{
 						setted = false;
-						if (useblacklist)
+						if (pcm) //PCM
+							blackListedSampleRates.Add(sampleRate);
+						else // DSD
 						{
-							blaskListedSampleRates.Add(sampleRate);
-							// fix realtek bufferupdate call - reinit as fact
-							driver.SetSampleRate(sampleRate % 44100 == 0 ? 48000 : 44100);
-							driver.SetSampleRate(sampleRate % 48000 == 0 ? 44100 : 48000);
+							var format = new AsioIoFormat { FormatType = AsioIoFormatType.PCMFormat };
+							driver.Driver.Future((int)AsioFeature.kAsioSetIoFormat, ref format);
+							driver.BuildCapabilities();
+							if (isInitialized)
+							{
+								driver.DisposeBuffers();
+								isInitialized = false;
+							}
 						}
+						// fix realtek bufferupdate call - reinit as fact
+						driver.SetSampleRate(sampleRate % 44100 == 0 ? 48000 : 44100);
+						driver.SetSampleRate(sampleRate % 48000 == 0 ? 44100 : 48000);
 						if (rise)
 							throw;
 					}
@@ -372,19 +381,6 @@ namespace NAudio.Wave
 					if (neededAsioMode() == WaveFormatEncoding.DSD)
 					{
 						desiredSampleRate = waveProvider.WaveFormat.SampleRate / 16;
-
-						//change to PCM, if needed
-						if (currentAsioMode() == WaveFormatEncoding.DSD)
-						{
-							var format = new AsioIoFormat { FormatType = AsioIoFormatType.PCMFormat };
-							driver.Driver.Future((int)AsioFeature.kAsioSetIoFormat, ref format);
-							driver.BuildCapabilities();
-							if (isInitialized)
-							{
-								driver.DisposeBuffers();
-								isInitialized = false;
-							}
-						}
 
 						if (!CheckAndSetSampleRate(desiredSampleRate, false))
 							throw new ArgumentException(ex.Message + $" Desired DoP sample rate '{desiredSampleRate}' is not supported.");
