@@ -279,6 +279,18 @@ namespace NAudio.Wave
 				return waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD ? WaveFormatEncoding.DSD : WaveFormatEncoding.Pcm;
 			}
 
+			void switchAsioMode(AsioIoFormatType type)
+			{
+				var format = new AsioIoFormat { FormatType = type };
+				driver.Driver.Future((int)AsioFeature.kAsioSetIoFormat, ref format);
+				driver.BuildCapabilities();
+				if (isInitialized)
+				{
+					driver.DisposeBuffers();
+					isInitialized = false;
+				}
+			}
+
 			bool CheckAndSetSampleRate(int sampleRate, bool rise = false, bool pcm = true)
 			{
 				bool setted = true;
@@ -297,7 +309,10 @@ namespace NAudio.Wave
 							}
 						}
 						else
+						{
+							switchAsioMode(AsioIoFormatType.PCMFormat);
 							setted = false;
+						}
 					}
 					catch
 					{
@@ -305,16 +320,7 @@ namespace NAudio.Wave
 						if (pcm) //PCM
 							blackListedSampleRates.Add(sampleRate);
 						else // DSD
-						{
-							var format = new AsioIoFormat { FormatType = AsioIoFormatType.PCMFormat };
-							driver.Driver.Future((int)AsioFeature.kAsioSetIoFormat, ref format);
-							driver.BuildCapabilities();
-							if (isInitialized)
-							{
-								driver.DisposeBuffers();
-								isInitialized = false;
-							}
-						}
+							switchAsioMode(AsioIoFormatType.PCMFormat);
 						// fix realtek bufferupdate call - reinit as fact
 						driver.SetSampleRate(sampleRate % 44100 == 0 ? 48000 : 44100);
 						driver.SetSampleRate(sampleRate % 48000 == 0 ? 44100 : 48000);
@@ -339,16 +345,7 @@ namespace NAudio.Wave
 				try
 				{
 					if (currentAsioMode() != neededAsioMode())
-					{
-						var format = new AsioIoFormat { FormatType = waveProvider.WaveFormat.BitsPerSample == 1 ? AsioIoFormatType.DSDFormat : AsioIoFormatType.PCMFormat };
-						driver.Driver.Future((int)AsioFeature.kAsioSetIoFormat, ref format);
-						driver.BuildCapabilities();
-						if (isInitialized)
-						{
-							driver.DisposeBuffers();
-							isInitialized = false;
-						}
-					}
+						switchAsioMode(waveProvider.WaveFormat.BitsPerSample == 1 ? AsioIoFormatType.DSDFormat : AsioIoFormatType.PCMFormat);
 
 					if (!CheckAndSetSampleRate(desiredSampleRate, false, waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD))
 					{
