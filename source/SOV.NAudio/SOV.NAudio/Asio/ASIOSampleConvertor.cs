@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace NAudio.Wave.Asio
 {
@@ -833,25 +834,29 @@ namespace NAudio.Wave.Asio
             }
         }
 
-        private static int clampTo24Bit(double sampleValue)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static int clampTo24Bit(double sampleValue)
         {
             sampleValue = (sampleValue < -1.0) ? -1.0 : (sampleValue > 1.0) ? 1.0 : sampleValue;
             return (int)(sampleValue * 8388607.0);
         }
 
-        private static int clampToInt(double sampleValue)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static int clampToInt(double sampleValue)
         {
             sampleValue = (sampleValue < -1.0) ? -1.0 : (sampleValue > 1.0) ? 1.0 : sampleValue;
             return (int)(sampleValue * 2147483647.0);
         }
 
-        private static short clampToShort(double sampleValue)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static short clampToShort(double sampleValue)
         {
             sampleValue = (sampleValue < -1.0) ? -1.0 : (sampleValue > 1.0) ? 1.0 : sampleValue;
             return (short)(sampleValue * 32767.0);
         }
 
 		const int shift8Max = 1 << (8 - 1);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int roundedShift8(int sampleValue)
 		{
 			if (sampleValue >= int.MaxValue - shift8Max || sampleValue <= int.MinValue + shift8Max)
@@ -863,6 +868,7 @@ namespace NAudio.Wave.Asio
 		}
 
 		const int shift16Max = 1 << (16 - 1);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static short roundedShift16(int sampleValue)
 		{
 			if (sampleValue >= int.MaxValue - shift16Max || sampleValue <= int.MinValue + shift16Max)
