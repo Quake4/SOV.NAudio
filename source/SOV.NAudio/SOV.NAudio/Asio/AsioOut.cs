@@ -310,7 +310,8 @@ namespace NAudio.Wave
 						}
 						else
 						{
-							switchAsioMode(AsioIoFormatType.PCMFormat);
+							if (!pcm)
+								switchAsioMode(AsioIoFormatType.PCMFormat);
 							setted = false;
 						}
 					}
@@ -354,19 +355,20 @@ namespace NAudio.Wave
 						else
 						{
 							// try resampler for pcm
-							while (!dmoResamplerUsed && (desiredSampleRate >>= 1) >= 44100)
-								if (CheckAndSetSampleRate(desiredSampleRate, false))
-								{
-									try
+							if (desiredSampleRate % 44100 == 0 || desiredSampleRate % 48000 == 0)
+								while (!dmoResamplerUsed && (desiredSampleRate >>= 1) >= 44100)
+									if (CheckAndSetSampleRate(desiredSampleRate, false))
 									{
-										// just check that we can make it.
-										dmoResamplerFormat = new WaveFormat(desiredSampleRate, bitsPerSample, waveProvider.WaveFormat.Channels);
-										dmoResampler = new ResamplerDmoStream(waveProvider, dmoResamplerFormat);
-										dmoResamplerUsed = true;
-										waveProvider = dmoResampler;
+										try
+										{
+											// just check that we can make it.
+											dmoResamplerFormat = new WaveFormat(desiredSampleRate, bitsPerSample, waveProvider.WaveFormat.Channels);
+											dmoResampler = new ResamplerDmoStream(waveProvider, dmoResamplerFormat);
+											dmoResamplerUsed = true;
+											waveProvider = dmoResampler;
+										}
+										catch { }
 									}
-									catch { }
-								}
 
 							if (!dmoResamplerUsed)
 								throw new ArgumentException($"Desired PCM sample rate '{waveProvider.WaveFormat.SampleRate}' is not supported.");
