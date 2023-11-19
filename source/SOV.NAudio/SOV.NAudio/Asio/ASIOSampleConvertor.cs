@@ -859,24 +859,20 @@ namespace NAudio.Wave.Asio
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int roundedShift8(int sampleValue)
 		{
-			if (sampleValue >= int.MaxValue - shift8Max || sampleValue <= int.MinValue + shift8Max)
+			if (sampleValue >= int.MaxValue - shift8Max)
 				return sampleValue >> 8;
-			else if (sampleValue >= 0)
-				return (sampleValue + shift8Max) >> 8;
 			else
-				return ((sampleValue - shift8Max) >> 8) + 1;
+				return (sampleValue + shift8Max) >> 8;
 		}
 
 		const int shift16Max = 1 << (16 - 1);
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static short roundedShift16(int sampleValue)
 		{
-			if (sampleValue >= int.MaxValue - shift16Max || sampleValue <= int.MinValue + shift16Max)
+			if (sampleValue >= int.MaxValue - shift16Max)
 				return (short)(sampleValue >> 16);
-			else if (sampleValue >= 0)
-				return (short)((sampleValue + shift16Max) >> 16);
 			else
-				return (short)(((sampleValue - shift16Max) >> 16) + 1);
+				return (short)((sampleValue + shift16Max) >> 16);
 		}
 	}
 }
