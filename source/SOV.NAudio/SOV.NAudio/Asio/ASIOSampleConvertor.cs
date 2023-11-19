@@ -410,43 +410,48 @@ namespace NAudio.Wave.Asio
 			unsafe
 			{
 				int channels = asioOutputBuffers.Length;
-				byte* inputSamples = (byte*)inputInterleavedBuffer;
+				int* inputSamples = (int*)inputInterleavedBuffer;
 				byte*[] samples = new byte*[channels];
 				for (int i = 0; i < channels; i++)
 					samples[i] = (byte*)asioOutputBuffers[i];
 
-				byte value;
+				int value;
 				// optimized mono to stereo
 				if (nbChannels == 1 && channels >= 2)
+				{
+					byte byteValue;
 					for (int i = 0; i < nbSamples; i++)
 					{
-						inputSamples++;
+						value = roundedShift8(*inputSamples++);
 
-						value = *inputSamples++;
-						*samples[0]++ = value;
-						*samples[1]++ = value;
+						byteValue = (byte)(value);
+						*samples[0]++ = byteValue;
+						*samples[1]++ = byteValue;
 
-						value = *inputSamples++;
-						*samples[0]++ = value;
-						*samples[1]++ = value;
+						byteValue = (byte)(value >> 8);
+						*samples[0]++ = byteValue;
+						*samples[1]++ = byteValue;
 
-						value = *inputSamples++;
-						*samples[0]++ = value;
-						*samples[1]++ = value;
+						byteValue = (byte)(value >> 16);
+						*samples[0]++ = byteValue;
+						*samples[1]++ = byteValue;
 					}
+				}
 				// optimized stereo to stereo
 				else if (nbChannels == 2 && channels == 2)
 					for (int i = 0; i < nbSamples; i++)
 					{
-						inputSamples++;
-						*samples[0]++ = *inputSamples++;
-						*samples[0]++ = *inputSamples++;
-						*samples[0]++ = *inputSamples++;
+						value = roundedShift8(*inputSamples++);
 
-						inputSamples++;
-						*samples[1]++ = *inputSamples++;
-						*samples[1]++ = *inputSamples++;
-						*samples[1]++ = *inputSamples++;
+						*samples[0]++ = (byte)(value);
+						*samples[0]++ = (byte)(value >> 8);
+						*samples[0]++ = (byte)(value >> 16);
+
+						value = roundedShift8(*inputSamples++);
+
+						*samples[1]++ = (byte)(value);
+						*samples[1]++ = (byte)(value >> 8);
+						*samples[1]++ = (byte)(value >> 16);
 					}
 				// generic
 				else
@@ -455,13 +460,14 @@ namespace NAudio.Wave.Asio
 						{
 							if (j < Math.Min(nbChannels, channels))
 							{
-								inputSamples++;
-								*samples[j]++ = *inputSamples++;
-								*samples[j]++ = *inputSamples++;
-								*samples[j]++ = *inputSamples++;
+								value = roundedShift8(*inputSamples++);
+
+								*samples[j]++ = (byte)(value);
+								*samples[j]++ = (byte)(value >> 8);
+								*samples[j]++ = (byte)(value >> 16);
 							}
 							else if (j >= channels)
-								inputSamples += 4;
+								inputSamples++;
 							if (j >= nbChannels)
 							{
 								*samples[j]++ = 0;
@@ -627,9 +633,8 @@ namespace NAudio.Wave.Asio
 
                 for (int i = 0; i < nbSamples; i++)
                 {
-                    *leftSamples++ = (short)(inputSamples[0] >> 16);
-                    *rightSamples++ = (short)(inputSamples[1] >> 16);
-                    inputSamples += 2;
+                    *leftSamples++ = roundedShift16(*inputSamples++);
+                    *rightSamples++ = roundedShift16(*inputSamples++);
                 }
             }
         }
@@ -652,7 +657,7 @@ namespace NAudio.Wave.Asio
                 {
                     for (int j = 0; j < nbChannels; j++)
                     {
-                        *samples[j]++ = (short)(*inputSamples++ >> 16);
+                        *samples[j]++ = roundedShift16(*inputSamples++);
                     }
                 }
             }
@@ -845,5 +850,27 @@ namespace NAudio.Wave.Asio
             sampleValue = (sampleValue < -1.0) ? -1.0 : (sampleValue > 1.0) ? 1.0 : sampleValue;
             return (short)(sampleValue * 32767.0);
         }
-    }
+
+		const int shift8Max = 1 << (8 - 1);
+		private static int roundedShift8(int sampleValue)
+		{
+			if (sampleValue >= int.MaxValue - shift8Max || sampleValue <= int.MinValue + shift8Max)
+				return sampleValue >> 8;
+			else if (sampleValue >= 0)
+				return (sampleValue + shift8Max) >> 8;
+			else
+				return ((sampleValue - shift8Max) >> 8) + 1;
+		}
+
+		const int shift16Max = 1 << (16 - 1);
+		private static short roundedShift16(int sampleValue)
+		{
+			if (sampleValue >= int.MaxValue - shift16Max || sampleValue <= int.MinValue + shift16Max)
+				return (short)(sampleValue >> 16);
+			else if (sampleValue >= 0)
+				return (short)((sampleValue + shift16Max) >> 16);
+			else
+				return (short)(((sampleValue - shift16Max) >> 16) + 1);
+		}
+	}
 }
