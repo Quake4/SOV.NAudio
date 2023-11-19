@@ -75,7 +75,7 @@ namespace NAudio.Wave.Asio
 							convertor = ConvertorDsdToDop24;
 							break;
 						case 16:
-							convertor = Convertor16To24Generic;
+							convertor = ConvertorShortTo24Generic;
 							break;
 						case 24:
 							convertor = Convertor24To24Generic;
@@ -282,7 +282,7 @@ namespace NAudio.Wave.Asio
 			}
         }
 
-		public static void Convertor16To24Generic(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
+		public static void ConvertorShortTo24Generic(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
 		{
 			unsafe
 			{
