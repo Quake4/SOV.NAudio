@@ -363,7 +363,7 @@ namespace NAudio.Wave
 										{
 											// just check that we can make it.
 											dmoResamplerFormat = new WaveFormat(desiredSampleRate, bitsPerSample, waveProvider.WaveFormat.Channels);
-											dmoResampler = new ResamplerDmoStream(waveProvider, dmoResamplerFormat);
+											dmoResampler = new ResamplerDmoStream(waveProvider, dmoResamplerFormat, ResamplerDmoStream.MaxQuality);
 											dmoResamplerUsed = true;
 											waveProvider = dmoResampler;
 										}
@@ -472,7 +472,7 @@ namespace NAudio.Wave
         {
 			if (dmoResamplerUsed && dmoResampler == null)
 			{
-				dmoResampler = new ResamplerDmoStream(sourceStream, dmoResamplerFormat);
+				dmoResampler = new ResamplerDmoStream(sourceStream, dmoResamplerFormat, ResamplerDmoStream.MaxQuality);
 				sourceStream = dmoResampler;
 			}
 
