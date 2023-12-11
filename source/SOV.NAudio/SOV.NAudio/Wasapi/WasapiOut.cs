@@ -317,7 +317,7 @@ namespace NAudio.Wave
 						if (audioClient.IsFormatSupported(shareMode, format))
 							return format.ToStandardWaveFormat();
 						// 24bit as 32bit
-						if (OutputWaveFormat.BitsPerSample == 24 && bitDepth == 24)
+						if (bitDepth == 24 && (OutputWaveFormat.BitsPerSample == 24 || OutputWaveFormat.BitsPerSample == 32))
 						{
 							format = new WaveFormatExtensible(sampleRate, bitDepth, channelCount, 1);
 							if (audioClient.IsFormatSupported(shareMode, format))
