@@ -5,7 +5,6 @@ using System.Threading;
 using System.Runtime.InteropServices;
 using NAudio.Utils;
 using System.Collections.Generic;
-using System.Linq;
 
 // ReSharper disable once CheckNamespace
 namespace NAudio.Wave
@@ -212,12 +211,38 @@ namespace NAudio.Wave
         {
             var readLength = frameCount * bytesPerFrame;
             int read = playbackProvider.Read(readBuffer, 0, readLength);
-            if (read == 0)
-            {
-                return true;
-            }
+            if (read == 0) return true;
+
             var buffer = renderClient.GetBuffer(frameCount);
-            Marshal.Copy(readBuffer, 0, buffer, read);
+			/*if (bytesPerFrame % 3 == 0) // 24bit need padding to 32
+			{
+				unsafe
+				{
+					byte* pByte = (byte*)buffer;
+					fixed (byte* pSource = readBuffer)
+					{
+						var pPtr = pSource;
+						var count = read / 8;// bytesPerFrame;
+						while (count-- > 0)
+						{
+							*pByte++ = *(pPtr + 3);
+							*pByte++ = *(pPtr + 2);
+							*pByte++ = *(pPtr + 1);
+							*pByte++ = *(pPtr + 0);
+							//pPtr += 3;
+
+							//*pByte++ = 0;
+							*pByte++ = 0;
+							*pByte++ = 0;
+							*pByte++ = 0;
+
+							pPtr += 8;
+						}
+					}
+				}
+			}
+			else*/
+				Marshal.Copy(readBuffer, 0, buffer, read);
             if (this.isUsingEventSync && this.shareMode == AudioClientShareMode.Exclusive)
             {
                 if (read < readLength)
@@ -288,11 +313,18 @@ namespace NAudio.Wave
                 {
                     foreach (var bitDepth in bitDepthsToTry)
                     {
-                        var format = new WaveFormatExtensible(sampleRate, bitDepth, channelCount);
-                        if (audioClient.IsFormatSupported(shareMode, format))
-                            return format.ToStandardWaveFormat();
-                    }
-                }
+						var format = new WaveFormatExtensible(sampleRate, bitDepth, channelCount);
+						if (audioClient.IsFormatSupported(shareMode, format))
+							return format.ToStandardWaveFormat();
+						// 24bit as 32bit
+						if (OutputWaveFormat.BitsPerSample == 24 && bitDepth == 24)
+						{
+							format = new WaveFormatExtensible(sampleRate, bitDepth, channelCount, 1);
+							if (audioClient.IsFormatSupported(shareMode, format))
+								return format.ToStandardWaveFormat();
+						}
+					}
+				}
             }
             throw new NotSupportedException("Can't find a supported format to use");
         }
@@ -401,22 +433,22 @@ namespace NAudio.Wave
             if (shareMode == AudioClientShareMode.Exclusive)
             {
                 flags = AudioClientStreamFlags.None;
-                var format = new WaveFormatExtensible(OutputWaveFormat.SampleRate, OutputWaveFormat.BitsPerSample, OutputWaveFormat.Channels);
-				if (!audioClient.IsFormatSupported(shareMode, format, out WaveFormatExtensible closestSampleRateFormat) ||
+				var format = new WaveFormatExtensible(OutputWaveFormat.SampleRate, OutputWaveFormat.BitsPerSample, OutputWaveFormat.Channels);
+				if (!audioClient.IsFormatSupported(shareMode, format/*, out WaveFormatExtensible closestSampleRateFormat*/) ||
 					format.ToStandardWaveFormat().Encoding != OutputWaveFormat.Encoding)
                 {
                     // Use closesSampleRateFormat (in sharedMode, it equals usualy to the audioClient.MixFormat)
                     // See documentation : http://msdn.microsoft.com/en-us/library/ms678737(VS.85).aspx 
                     // They say : "In shared mode, the audio engine always supports the mix format"
                     // The MixFormat is more likely to be a WaveFormatExtensible.
-                    if (closestSampleRateFormat == null)
-                    {
+                    //if (closestSampleRateFormat == null)
+                    //{
                         OutputWaveFormat = GetFallbackFormat();
-                    }
-                    else
-                    {
-                        OutputWaveFormat = closestSampleRateFormat;
-                    }
+                    //}
+                    //else
+                    //{
+                    //    OutputWaveFormat = closestSampleRateFormat.ToStandardWaveFormat();
+                    //}
 
                     try
                     {
