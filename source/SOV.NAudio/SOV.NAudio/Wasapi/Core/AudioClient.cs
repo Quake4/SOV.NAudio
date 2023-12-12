@@ -92,12 +92,11 @@ namespace NAudio.CoreAudioApi
             AudioClientStreamFlags streamFlags,
             long bufferDuration,
             long periodicity,
-            WaveFormat waveFormat,
+            WaveFormatExtensible waveFormat,
             Guid audioSessionGuid)
         {
             //this.shareMode = shareMode;
-            var format = waveFormat is WaveFormatExtensible ? waveFormat : new WaveFormatExtensible(waveFormat.SampleRate, waveFormat.BitsPerSample, waveFormat.Channels);
-            int hresult = audioClientInterface.Initialize(shareMode, streamFlags, bufferDuration, periodicity, format, ref audioSessionGuid);
+            int hresult = audioClientInterface.Initialize(shareMode, streamFlags, bufferDuration, periodicity, waveFormat, ref audioSessionGuid);
             Marshal.ThrowExceptionForHR(hresult);
             // may have changed the mix format so reset it
             mixFormat = null;
