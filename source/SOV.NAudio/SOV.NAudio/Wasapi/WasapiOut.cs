@@ -12,7 +12,7 @@ namespace NAudio.Wave
 	/// <summary>
 	/// Support for playback using Wasapi
 	/// </summary>
-	public class WasapiOut : IWavePlayer, IWavePosition
+	public class WasapiOut : IWavePlayer//, IWavePosition
     {
         protected AudioClient audioClient;
         private readonly MMDevice mmDevice;
@@ -337,7 +337,7 @@ namespace NAudio.Wave
         /// stream)
         /// </summary>
         /// <returns>Position in bytes</returns>
-        public long GetPosition()
+        /*public long GetPosition()
         {
             ulong pos;
             switch (playbackState)
@@ -352,7 +352,7 @@ namespace NAudio.Wave
                     break;
             }
             return ((long)pos * OutputWaveFormat.AverageBytesPerSecond) / (long)audioClient.AudioClockClient.Frequency;
-        }
+        }*/
 
 		public WaveFormatExtensible InternalWaveFormat { get; protected set; }
 

@@ -93,7 +93,6 @@
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\AudioClientShareMode.cs" Link="Wasapi\Core\AudioClientShareMode.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\AudioClientStreamFlags.cs" Link="Wasapi\Core\AudioClientStreamFlags.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\AudioClientStreamOptions.cs" Link="Wasapi\Core\AudioClientStreamOptions.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\AudioClockClient.cs" Link="Wasapi\Core\AudioClockClient.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\AudioRenderClient.cs" Link="Wasapi\Core\AudioRenderClient.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\AudioStreamCategory.cs" Link="Wasapi\Core\AudioStreamCategory.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\DataFlow.cs" Link="Wasapi\Core\DataFlow.cs" />
@@ -106,7 +105,6 @@
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IAgileObject.cs" Link="Wasapi\Core\Interfaces\IAgileObject.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IAudioClient.cs" Link="Wasapi\Core\Interfaces\IAudioClient.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IAudioClient2.cs" Link="Wasapi\Core\Interfaces\IAudioClient2.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IAudioClock2.cs" Link="Wasapi\Core\Interfaces\IAudioClock2.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IAudioRenderClient.cs" Link="Wasapi\Core\Interfaces\IAudioRenderClient.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IMMDevice.cs" Link="Wasapi\Core\Interfaces\IMMDevice.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Interfaces\IMMDeviceCollection.cs" Link="Wasapi\Core\Interfaces\IMMDeviceCollection.cs" />

@@ -16,7 +16,7 @@ namespace NAudio.CoreAudioApi
 		private WaveFormat mixFormat;
 		private AudioRenderClient audioRenderClient;
 		//private AudioCaptureClient audioCaptureClient;
-		private AudioClockClient audioClockClient;
+		//private AudioClockClient audioClockClient;
 		//private AudioStreamVolume audioStreamVolume;
 		//private AudioClientShareMode shareMode;
 
@@ -189,7 +189,7 @@ namespace NAudio.CoreAudioApi
                 return audioStreamVolume;
             }
         }
-		*/
+		
         /// <summary>
         /// Gets the AudioClockClient service
         /// </summary>
@@ -206,7 +206,7 @@ namespace NAudio.CoreAudioApi
                 return audioClockClient;
             }
         }
-        
+        */
         /// <summary>
         /// Gets the AudioRenderClient service
         /// </summary>
@@ -346,11 +346,11 @@ namespace NAudio.CoreAudioApi
         {
             if (audioClientInterface != null)
             {
-                if (audioClockClient != null)
+                /*if (audioClockClient != null)
                 {
                     audioClockClient.Dispose();
                     audioClockClient = null;
-                }
+                }*/
                 if (audioRenderClient != null)
                 {
                     audioRenderClient.Dispose();
