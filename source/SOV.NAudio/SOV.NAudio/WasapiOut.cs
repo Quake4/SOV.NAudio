@@ -10,7 +10,7 @@ namespace SOV.NAudio
 
 		public bool SharedMode => shareMode == AudioClientShareMode.Shared;
 
-		public WaveFormat WaveFormat { get { return SharedMode ? audioClient.MixFormat : base.OutputWaveFormat; } }
+		public WaveFormat WaveFormat { get { return SharedMode ? audioClient.MixFormat : InternalWaveFormat.ToStandardWaveFormat(true); } }
 
 		public WasapiOut(MMDevice device, AudioClientShareMode shareMode, bool useEventSync = false, int latency = 100)
 			: base(device, shareMode, useEventSync, latency)
