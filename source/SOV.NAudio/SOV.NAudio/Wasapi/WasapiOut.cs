@@ -216,35 +216,7 @@ namespace NAudio.Wave
             if (read == 0) return true;
 
             var buffer = renderClient.GetBuffer(frameCount);
-			/*if (bytesPerFrame % 3 == 0) // 24bit need padding to 32
-			{
-				unsafe
-				{
-					byte* pByte = (byte*)buffer;
-					fixed (byte* pSource = readBuffer)
-					{
-						var pPtr = pSource;
-						var count = read / 8;// bytesPerFrame;
-						while (count-- > 0)
-						{
-							*pByte++ = *(pPtr + 3);
-							*pByte++ = *(pPtr + 2);
-							*pByte++ = *(pPtr + 1);
-							*pByte++ = *(pPtr + 0);
-							//pPtr += 3;
-
-							//*pByte++ = 0;
-							*pByte++ = 0;
-							*pByte++ = 0;
-							*pByte++ = 0;
-
-							pPtr += 8;
-						}
-					}
-				}
-			}
-			else*/
-				Marshal.Copy(readBuffer, 0, buffer, read);
+			Marshal.Copy(readBuffer, 0, buffer, read);
             if (this.isUsingEventSync && this.shareMode == AudioClientShareMode.Exclusive)
             {
                 if (read < readLength)
@@ -449,29 +421,33 @@ namespace NAudio.Wave
                     //if (closestSampleRateFormat == null)
                     //{
                         InternalWaveFormat = GetFallbackFormat();
-                    //}
-                    //else
-                    //{
-                    //    OutputWaveFormat = closestSampleRateFormat.ToStandardWaveFormat();
-                    //}
-
-                    try
-                    {
-                        // just check that we can make it.
-                        using (new ResamplerDmoStream(waveProvider, OutputWaveFormat, ResamplerDmoStream.MaxQuality))
-                        {
-                        }
-                    }
-                    catch (Exception)
-                    {
-						// On Windows 10 some poorly coded drivers return a bad format in to closestSampleRateFormat
-						// In that case, try and fallback as if it provided no closest (e.g. force trying the mix format)
-						InternalWaveFormat = GetFallbackFormat();
-                        using (new ResamplerDmoStream(waveProvider, OutputWaveFormat, ResamplerDmoStream.MaxQuality))
-                        {
-                        }
-                    }
-                    dmoResamplerNeeded = true;
+					//}
+					//else
+					//{
+					//    OutputWaveFormat = closestSampleRateFormat.ToStandardWaveFormat();
+					//}
+					dmoResamplerNeeded = false;
+					var outWF = OutputWaveFormat;
+					if (outWF.ToString() != waveProvider.WaveFormat.ToString())
+					{
+						try
+						{
+							// just check that we can make it.
+							using (new ResamplerDmoStream(waveProvider, outWF, ResamplerDmoStream.MaxQuality))
+							{
+							}
+						}
+						catch (Exception)
+						{
+							// On Windows 10 some poorly coded drivers return a bad format in to closestSampleRateFormat
+							// In that case, try and fallback as if it provided no closest (e.g. force trying the mix format)
+							InternalWaveFormat = GetFallbackFormat();
+							using (new ResamplerDmoStream(waveProvider, outWF, ResamplerDmoStream.MaxQuality))
+							{
+							}
+						}
+						dmoResamplerNeeded = true;
+					}
                 }
                 else
                 {
