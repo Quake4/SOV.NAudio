@@ -30,11 +30,12 @@ namespace NAudio.Wave
         private Thread playThread;
         private readonly SynchronizationContext syncContext;
         protected bool dmoResamplerNeeded;
-        
-        /// <summary>
-        /// Playback Stopped
-        /// </summary>
-        public event EventHandler<StoppedEventArgs> PlaybackStopped;
+		WasapiFrameConverter.FrameConverter frameConverter;
+
+		/// <summary>
+		/// Playback Stopped
+		/// </summary>
+		public event EventHandler<StoppedEventArgs> PlaybackStopped;
 
         /// <summary>
         /// WASAPI Out shared mode, default
@@ -113,7 +114,7 @@ namespace NAudio.Wave
                 // fill a whole buffer
                 bufferFrameCount = audioClient.BufferSize;
                 bytesPerFrame = OutputWaveFormat.Channels * OutputWaveFormat.BitsPerSample / 8;
-                readBuffer = BufferHelpers.Ensure(readBuffer, bufferFrameCount * bytesPerFrame);
+                readBuffer = BufferHelpers.Ensure(readBuffer, bufferFrameCount * Math.Max(OutputWaveFormat.BlockAlign, sourceWaveFormat.BlockAlign));
                 if (FillBuffer(playbackProvider, bufferFrameCount))
                 {
                     // played a zero length stream - exit immediately
@@ -212,11 +213,23 @@ namespace NAudio.Wave
         private bool FillBuffer(IWaveProvider playbackProvider, int frameCount)
         {
             var readLength = frameCount * bytesPerFrame;
-            int read = playbackProvider.Read(readBuffer, 0, readLength);
-            if (read == 0) return true;
+			int read = playbackProvider.Read(readBuffer, 0, frameConverter == null ? readLength : (frameCount * sourceWaveFormat.BlockAlign));
+			if (read == 0) return true;
 
             var buffer = renderClient.GetBuffer(frameCount);
-			Marshal.Copy(readBuffer, 0, buffer, read);
+			if (frameConverter != null)
+			{
+				var outWF = OutputWaveFormat;
+				var frames = read / sourceWaveFormat.BlockAlign;
+				unsafe
+				{
+					fixed (void* pBuffer = readBuffer)
+						frameConverter(new IntPtr(pBuffer), sourceWaveFormat.Channels, buffer, outWF.Channels, frames);
+					read = frames * outWF.BlockAlign;
+				}
+			}
+			else
+				Marshal.Copy(readBuffer, 0, buffer, read);
             if (this.isUsingEventSync && this.shareMode == AudioClientShareMode.Exclusive)
             {
                 if (read < readLength)
@@ -291,9 +304,9 @@ namespace NAudio.Wave
 						if (audioClient.IsFormatSupported(shareMode, format))
 							return format;
 						// 24bit as 32bit
-						if (bitDepth == 24 && (sourceWaveFormat.BitsPerSample == 24 || sourceWaveFormat.BitsPerSample == 32))
+						if (bitDepth == 32 && (sourceWaveFormat.BitsPerSample == 24 || sourceWaveFormat.BitsPerSample == 32))
 						{
-							format = new WaveFormatExtensible(sampleRate, bitDepth, channelCount, 1);
+							format = new WaveFormatExtensible(sampleRate, 24, channelCount, 1);
 							if (audioClient.IsFormatSupported(shareMode, format))
 								return format;
 						}
@@ -428,7 +441,8 @@ namespace NAudio.Wave
 					//}
 					dmoResamplerNeeded = false;
 					var outWF = OutputWaveFormat;
-					if (outWF.ToString() != waveProvider.WaveFormat.ToString())
+					frameConverter = WasapiFrameConverter.SelectFrameConverter(waveProvider.WaveFormat, outWF);
+					if (frameConverter == null && outWF.ToString() != waveProvider.WaveFormat.ToString())
 					{
 						try
 						{
@@ -451,10 +465,11 @@ namespace NAudio.Wave
                 }
                 else
                 {
-                    dmoResamplerNeeded = false;
 					InternalWaveFormat = format;
+					frameConverter = null;
+					dmoResamplerNeeded = false;
 				}
-            }
+			}
 
 			// If using EventSync, setup is specific with shareMode
 			if (isUsingEventSync)
