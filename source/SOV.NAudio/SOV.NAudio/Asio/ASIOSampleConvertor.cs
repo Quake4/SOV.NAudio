@@ -834,22 +834,22 @@ namespace NAudio.Wave.Asio
             }
         }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int clampTo24Bit(double sampleValue)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int clampTo24Bit(double sampleValue)
         {
             sampleValue = (sampleValue < -1.0) ? -1.0 : (sampleValue > 1.0) ? 1.0 : sampleValue;
             return (int)(sampleValue * 8388607.0);
         }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int clampToInt(double sampleValue)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int clampToInt(double sampleValue)
         {
             sampleValue = (sampleValue < -1.0) ? -1.0 : (sampleValue > 1.0) ? 1.0 : sampleValue;
             return (int)(sampleValue * 2147483647.0);
         }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static short clampToShort(double sampleValue)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short clampToShort(double sampleValue)
         {
             sampleValue = (sampleValue < -1.0) ? -1.0 : (sampleValue > 1.0) ? 1.0 : sampleValue;
             return (short)(sampleValue * 32767.0);
@@ -857,7 +857,7 @@ namespace NAudio.Wave.Asio
 
 		const int shift8Max = 1 << (8 - 1);
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int roundedShift8(int sampleValue)
+		public static int roundedShift8(int sampleValue)
 		{
 			if (sampleValue >= int.MaxValue - shift8Max)
 				return sampleValue >> 8;
@@ -867,7 +867,7 @@ namespace NAudio.Wave.Asio
 
 		const int shift16Max = 1 << (16 - 1);
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static short roundedShift16(int sampleValue)
+		public static short roundedShift16(int sampleValue)
 		{
 			if (sampleValue >= int.MaxValue - shift16Max)
 				return (short)(sampleValue >> 16);
