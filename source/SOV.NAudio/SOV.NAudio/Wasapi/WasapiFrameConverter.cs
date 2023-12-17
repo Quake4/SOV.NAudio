@@ -135,28 +135,32 @@ namespace NAudio.Wave
 					for (int i = 0; i < frames / 2; i++)
 					{
 						//left
+						//*output++ = (0x05 << 24) | (input[0] << 16) | (input[2] << 8) | 0x69;
+						*output++ = 0x69;
 						*output++ = input[2];
 						*output++ = input[0];
 						*output++ = 0x05;
-						*output++ = 0x00;
 
 						//right
+						//*output++ = (0x05 << 24) | (input[1] << 16) | (input[3] << 8) | 0x69;
+						*output++ = 0x69;
 						*output++ = input[3];
 						*output++ = input[1];
 						*output++ = 0x05;
-						*output++ = 0x00;
 
 						//left
+						//*output++ = (0xFA << 24) | (input[4] << 16) | (input[6] << 8) | 0x69;
+						*output++ = 0x69;
 						*output++ = input[6];
 						*output++ = input[4];
 						*output++ = 0xFA;
-						*output++ = 0x00;
 
 						//right
+						//*output++ = (0xFA << 24) | (input[5] << 16) | (input[7] << 8) | 0x69;
+						*output++ = 0x69;
 						*output++ = input[7];
 						*output++ = input[5];
 						*output++ = 0xFA;
-						*output++ = 0x00;
 
 						input += 4 * inputChannels;
 					}
