@@ -112,6 +112,80 @@ namespace NAudio.Wave
 
 		internal static void ConverterDSDTo24Generic(IntPtr inputInterleavedBuffer, int inputChannels, IntPtr outputInterleavedBuffer, int outputChannels, int frames)
 		{
+			unsafe
+			{
+				byte* input = (byte*)inputInterleavedBuffer;
+				byte* output = (byte*)outputInterleavedBuffer;
+
+				// optimized mono to stereo
+				if (inputChannels == 1 && outputChannels >= 2)
+					for (int i = 0; i < frames; i++)
+					{
+						//left
+						*output++ = input[1];
+						*output++ = input[0];
+						*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+
+						//right
+						*output++ = input[1];
+						*output++ = input[0];
+						*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+
+						output += 3 * (outputChannels - 2);
+						input += 2;
+					}
+				// optimized stereo to stereo
+				else if (inputChannels == 2 && outputChannels == 2)
+					for (int i = 0; i < frames / 2; i++)
+					{
+						//left
+						*output++ = input[2];
+						*output++ = input[0];
+						*output++ = 0x05;
+
+						//right
+						*output++ = input[3];
+						*output++ = input[1];
+						*output++ = 0x05;
+
+						//left
+						*output++ = input[6];
+						*output++ = input[4];
+						*output++ = 0xFA;
+
+						//right
+						*output++ = input[7];
+						*output++ = input[5];
+						*output++ = 0xFA;
+
+						input += 4 * inputChannels;
+					}
+				// generic
+				else
+				{
+					var max = Math.Max(inputChannels, outputChannels);
+					var min = Math.Min(inputChannels, outputChannels);
+					for (int i = 0; i < frames; i++)
+					{
+						for (int j = 0; j < max; j++)
+						{
+							if (j < min)
+							{
+								*output++ = input[inputChannels * 1 + j];
+								*output++ = input[inputChannels * 0 + j];
+								*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+							}
+							if (j >= inputChannels)
+							{
+								*output++ = 0x69;
+								*output++ = 0x69;
+								*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+							}
+						}
+						input += 2 * inputChannels;
+					}
+				}
+			}
 		}
 
 		internal static void ConverterDSDTo32Generic(IntPtr inputInterleavedBuffer, int inputChannels, IntPtr outputInterleavedBuffer, int outputChannels, int frames)
