@@ -19,10 +19,22 @@ namespace NAudio.Wave
 
 		public static FrameConverter SelectFrameConverter(WaveFormat input, WaveFormat output)
 		{
-			if (input.SampleRate != output.SampleRate)
+			if (input.SampleRate != output.SampleRate && input.Encoding != WaveFormatEncoding.DSD)
 				return null;
 
-			if (output.Encoding == WaveFormatEncoding.Pcm)
+            if (input.Encoding == WaveFormatEncoding.DSD)
+            {
+				switch (output.BitsPerSample)
+				{
+					case 24:
+						return ConverterDSDTo24Generic;
+					case 32:
+						return ConverterDSDTo32Generic;
+					default:
+						throw new Exception($"Unsupported DoP bits {output.BitsPerSample}.");
+				}
+			}
+			else if (output.Encoding == WaveFormatEncoding.Pcm)
 			{
 				switch (input.Encoding)
 				{
@@ -95,6 +107,79 @@ namespace NAudio.Wave
 
 			return null;
 		}
+
+		#region DoP
+
+		internal static void ConverterDSDTo24Generic(IntPtr inputInterleavedBuffer, int inputChannels, IntPtr outputInterleavedBuffer, int outputChannels, int frames)
+		{
+		}
+
+		internal static void ConverterDSDTo32Generic(IntPtr inputInterleavedBuffer, int inputChannels, IntPtr outputInterleavedBuffer, int outputChannels, int frames)
+		{
+			unsafe
+			{
+				byte* input = (byte*)inputInterleavedBuffer;
+				byte* output = (byte*)outputInterleavedBuffer;
+
+				// optimized mono to stereo
+				/*if (inputChannels == 1 && outputChannels >= 2)
+					for (int i = 0; i < frames; i++)
+					{
+						var value = *input++;
+						output[0] = value;
+						output[1] = value;
+						output += outputChannels;
+					}
+				// optimized stereo to stereo
+				else*/ if (inputChannels == 2 && outputChannels == 2)
+					for (int i = 0; i < frames / 2; i++)
+					{
+						//left
+						*output++ = input[2];
+						*output++ = input[0];
+						*output++ = 0x05;
+						*output++ = 0x00;
+
+						//right
+						*output++ = input[3];
+						*output++ = input[1];
+						*output++ = 0x05;
+						*output++ = 0x00;
+
+						//left
+						*output++ = input[6];
+						*output++ = input[4];
+						*output++ = 0xFA;
+						*output++ = 0x00;
+
+						//right
+						*output++ = input[7];
+						*output++ = input[5];
+						*output++ = 0xFA;
+						*output++ = 0x00;
+
+						input += 4 * inputChannels;
+					}
+				// generic
+				/*else
+				{
+					var max = Math.Max(inputChannels, outputChannels);
+					var min = Math.Min(inputChannels, outputChannels);
+					for (int i = 0; i < frames; i++)
+						for (int j = 0; j < max; j++)
+						{
+							if (j < min)
+								*output++ = *input++;
+							else if (j >= outputChannels)
+								input++;
+							if (j >= inputChannels)
+								*output++ = 0;
+						}
+				}*/
+			}
+		}
+
+		#endregion
 
 		#region PCM
 
@@ -358,7 +443,6 @@ namespace NAudio.Wave
 		{
 			unsafe
 			{
-				// Use a trick (short instead of int to avoid any convertion from 16Bit to 32Bit)
 				int* input = (int*)inputInterleavedBuffer;
 				int* output = (int*)outputInterleavedBuffer;
 
@@ -405,7 +489,6 @@ namespace NAudio.Wave
 		{
 			unsafe
 			{
-				// Use a trick (short instead of int to avoid any convertion from 16Bit to 32Bit)
 				float* input = (float*)inputInterleavedBuffer;
 				short* output = (short*)outputInterleavedBuffer;
 
@@ -452,7 +535,6 @@ namespace NAudio.Wave
 		{
 			unsafe
 			{
-				// Use a trick (short instead of int to avoid any convertion from 16Bit to 32Bit)
 				float* input = (float*)inputInterleavedBuffer;
 				int* output = (int*)outputInterleavedBuffer;
 
