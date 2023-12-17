@@ -30,6 +30,7 @@ namespace NAudio.Wave
         private Thread playThread;
         private readonly SynchronizationContext syncContext;
         protected bool dmoResamplerNeeded;
+		WaveFormatExtensible internalWaveFormat;
 		WasapiFrameConverter.FrameConverter frameConverter;
 
 		/// <summary>
@@ -219,13 +220,12 @@ namespace NAudio.Wave
             var buffer = renderClient.GetBuffer(frameCount);
 			if (frameConverter != null)
 			{
-				var outWF = OutputWaveFormat;
 				var frames = read / sourceWaveFormat.BlockAlign;
 				unsafe
 				{
 					fixed (void* pBuffer = readBuffer)
-						frameConverter(new IntPtr(pBuffer), sourceWaveFormat.Channels, buffer, outWF.Channels, frames);
-					read = frames * outWF.BlockAlign;
+						frameConverter(new IntPtr(pBuffer), sourceWaveFormat.Channels, buffer, OutputWaveFormat.Channels, frames);
+					read = frames * OutputWaveFormat.BlockAlign;
 				}
 			}
 			else
@@ -339,12 +339,16 @@ namespace NAudio.Wave
             return ((long)pos * OutputWaveFormat.AverageBytesPerSecond) / (long)audioClient.AudioClockClient.Frequency;
         }*/
 
-		public WaveFormatExtensible InternalWaveFormat { get; protected set; }
+		public WaveFormatExtensible InternalWaveFormat
+		{
+			get { return internalWaveFormat; }
+			protected set { internalWaveFormat = value; OutputWaveFormat = value.ToStandardWaveFormat(); }
+		}
 
 		/// <summary>
 		/// Gets a <see cref="Wave.WaveFormat"/> instance indicating the format the hardware is using.
 		/// </summary>
-		public WaveFormat OutputWaveFormat => InternalWaveFormat.ToStandardWaveFormat();
+		public WaveFormat OutputWaveFormat { get; protected set; }
 
 #region IWavePlayer Members
 
@@ -401,14 +405,14 @@ namespace NAudio.Wave
         /// <param name="waveProvider">IWaveProvider to play</param>
         public void Init(IWaveProvider waveProvider)
         {
-            if (sourceProvider != null && sourceWaveFormat == waveProvider.WaveFormat && sourceWaveFormat.ToString() == waveProvider.WaveFormat.ToString())
+            if (sourceProvider != null && sourceWaveFormat.ToString() == waveProvider.WaveFormat.ToString())
             {
                 sourceProvider = waveProvider;
                 return;
             }
 
             long latencyRefTimes = latencyMilliseconds * 10000L;
-            WaveFormat prevOutputWaveFormat = InternalWaveFormat.ToStandardWaveFormat();
+            WaveFormat prevOutputWaveFormat = OutputWaveFormat;
             //OutputWaveFormat = waveProvider.WaveFormat;
 
 			//if (OutputWaveFormat.Encoding == WaveFormatEncoding.DSD)
