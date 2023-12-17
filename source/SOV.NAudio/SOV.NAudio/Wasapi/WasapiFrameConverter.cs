@@ -311,7 +311,6 @@ namespace NAudio.Wave
 		{
 			unsafe
 			{
-				// Use a trick (short instead of int to avoid any convertion from 16Bit to 32Bit)
 				int* input = (int*)inputInterleavedBuffer;
 				short* output = (short*)outputInterleavedBuffer;
 
@@ -358,7 +357,6 @@ namespace NAudio.Wave
 		{
 			unsafe
 			{
-				// Use a trick (short instead of int to avoid any convertion from 16Bit to 32Bit)
 				int* input = (int*)inputInterleavedBuffer;
 				int* output = (int*)outputInterleavedBuffer;
 
@@ -405,7 +403,6 @@ namespace NAudio.Wave
 		{
 			unsafe
 			{
-				// Use a trick (short instead of int to avoid any convertion from 16Bit to 32Bit)
 				float* input = (float*)inputInterleavedBuffer;
 				short* output = (short*)outputInterleavedBuffer;
 
@@ -452,7 +449,6 @@ namespace NAudio.Wave
 		{
 			unsafe
 			{
-				// Use a trick (short instead of int to avoid any convertion from 16Bit to 32Bit)
 				float* input = (float*)inputInterleavedBuffer;
 				int* output = (int*)outputInterleavedBuffer;
 
