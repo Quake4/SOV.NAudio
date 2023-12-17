@@ -207,7 +207,7 @@ namespace NAudio.Wave
 				if (inputChannels == 1 && outputChannels >= 2)
 					for (int i = 0; i < frames; i++)
 					{
-						var value = (short)((*input++ << 16) | *input++ | (*input++ << 8));
+						var value = AsioSampleConvertor.roundedShift16((*input++ << 8) | (*input++ << 16) | (*input++ << 24));
 						output[0] = value;
 						output[1] = value;
 						output += outputChannels;
@@ -216,9 +216,8 @@ namespace NAudio.Wave
 				else if (inputChannels == 2 && outputChannels == 2)
 					for (int i = 0; i < frames; i++)
 					{
-						*output++ = (short)(input[1] | (input[2] << 8));
-						*output++ = (short)(input[4] | (input[5] << 8));
-						input += 6;
+						*output++ = AsioSampleConvertor.roundedShift16((*input++ << 8) | (*input++ << 16) | (*input++ << 24));
+						*output++ = AsioSampleConvertor.roundedShift16((*input++ << 8) | (*input++ << 16) | (*input++ << 24));
 					}
 				// generic
 				else
@@ -229,7 +228,7 @@ namespace NAudio.Wave
 						for (int j = 0; j < max; j++)
 						{
 							if (j < min)
-								*output++ = (short)((*input++ << 16) | *input++ | (*input++ << 8));
+								*output++ = AsioSampleConvertor.roundedShift16((*input++ << 8) | (*input++ << 16) | (*input++ << 24));
 							else if (j >= outputChannels)
 								input += 3;
 							if (j >= inputChannels)
