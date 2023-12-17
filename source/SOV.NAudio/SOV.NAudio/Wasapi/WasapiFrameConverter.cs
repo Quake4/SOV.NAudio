@@ -165,21 +165,32 @@ namespace NAudio.Wave
 						input += 4 * inputChannels;
 					}
 				// generic
-				/*else
+				else
 				{
 					var max = Math.Max(inputChannels, outputChannels);
 					var min = Math.Min(inputChannels, outputChannels);
 					for (int i = 0; i < frames; i++)
+					{
 						for (int j = 0; j < max; j++)
 						{
 							if (j < min)
-								*output++ = *input++;
-							else if (j >= outputChannels)
-								input++;
+							{
+								*output++ = 0x69;
+								*output++ = input[inputChannels * 1 + j];
+								*output++ = input[inputChannels * 0 + j];
+								*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+							}
 							if (j >= inputChannels)
-								*output++ = 0;
+							{
+								*output++ = 0x69;
+								*output++ = 0x69;
+								*output++ = 0x69;
+								*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+							}
 						}
-				}*/
+						input += 2 * inputChannels;
+					}
+				}
 			}
 		}
 

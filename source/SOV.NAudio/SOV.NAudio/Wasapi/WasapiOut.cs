@@ -19,7 +19,7 @@ namespace NAudio.Wave
         protected readonly AudioClientShareMode shareMode;
         private AudioRenderClient renderClient;
         private IWaveProvider sourceProvider;
-        private WaveFormat sourceWaveFormat;
+        protected WaveFormat sourceWaveFormat;
         private int latencyMilliseconds;
         private int bufferFrameCount;
         private int bytesPerFrame;
@@ -115,7 +115,8 @@ namespace NAudio.Wave
                 // fill a whole buffer
                 bufferFrameCount = audioClient.BufferSize;
                 bytesPerFrame = OutputWaveFormat.Channels * OutputWaveFormat.BitsPerSample / 8;
-                readBuffer = BufferHelpers.Ensure(readBuffer, bufferFrameCount * Math.Max(OutputWaveFormat.BlockAlign, sourceWaveFormat.BlockAlign));
+                readBuffer = BufferHelpers.Ensure(readBuffer, bufferFrameCount * Math.Max(OutputWaveFormat.BlockAlign,
+					(sourceWaveFormat.Encoding == WaveFormatEncoding.DSD ? 2 : 1) * sourceWaveFormat.BlockAlign));
                 if (FillBuffer(playbackProvider, bufferFrameCount))
                 {
                     // played a zero length stream - exit immediately
@@ -269,7 +270,38 @@ namespace NAudio.Wave
             return false;
         }
 
-        private WaveFormatExtensible GetFallbackFormat()
+		private WaveFormatExtensible GetDoPFormat()
+		{
+			var deviceChannels = audioClient.MixFormat.Channels; // almost certain to be stereo
+			var sampleRate = sourceWaveFormat.SampleRate / 16;
+
+			var channelCountsToTry = new List<int>() { sourceWaveFormat.Channels };
+			if (!channelCountsToTry.Contains(deviceChannels)) channelCountsToTry.Add(deviceChannels);
+			if (!channelCountsToTry.Contains(2)) channelCountsToTry.Add(2);
+
+			var bitDepthsToTry = new List<int>() { 32, 24 };
+
+			foreach (var channelCount in channelCountsToTry)
+			{
+				foreach (var bitDepth in bitDepthsToTry)
+				{
+					var format = new WaveFormatExtensible(sampleRate, bitDepth, channelCount);
+					if (audioClient.IsFormatSupported(shareMode, format))
+						return format;
+					// 24bit as 32bit
+					if (bitDepth == 32 && (sourceWaveFormat.BitsPerSample == 24 || sourceWaveFormat.BitsPerSample == 32))
+					{
+						format = new WaveFormatExtensible(sampleRate, 24, channelCount, 1);
+						if (audioClient.IsFormatSupported(shareMode, format))
+							return format;
+					}
+				}
+			}
+
+			throw new NotSupportedException("Can't find a supported format to use");
+		}
+
+		private WaveFormatExtensible GetFallbackFormat()
         {
             //var deviceSampleRate = audioClient.MixFormat.SampleRate;
             var deviceChannels = audioClient.MixFormat.Channels; // almost certain to be stereo
@@ -433,21 +465,7 @@ namespace NAudio.Wave
                 flags = AudioClientStreamFlags.None;
 				if (waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD)
 				{
-					var desiredSampleRate = waveProvider.WaveFormat.SampleRate / 16;
-					var format = new WaveFormatExtensible(desiredSampleRate, 24, waveProvider.WaveFormat.Channels);
-					if (!audioClient.IsFormatSupported(shareMode, format))
-					{
-						format = new WaveFormatExtensible(desiredSampleRate, 32, waveProvider.WaveFormat.Channels);
-						if (!audioClient.IsFormatSupported(shareMode, format))
-						{
-							format = new WaveFormatExtensible(desiredSampleRate, 24, waveProvider.WaveFormat.Channels, 1);
-							if (!audioClient.IsFormatSupported(shareMode, format))
-							{
-								throw new ArgumentException($" Desired DoP sample rate '{desiredSampleRate}' is not supported.");
-							}
-						}
-					}
-					InternalWaveFormat = format;
+					InternalWaveFormat = GetDoPFormat();
 					//OutputWaveFormat = WaveFormat.CreateCustomFormat(WaveFormatEncoding.DoP,
 					//	desiredSampleRate, OutputWaveFormat.Channels, OutputWaveFormat.AverageBytesPerSecond, OutputWaveFormat.BlockAlign, OutputWaveFormat.BitsPerSample);
 					frameConverter = WasapiFrameConverter.SelectFrameConverter(waveProvider.WaveFormat, OutputWaveFormat);
