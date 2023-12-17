@@ -122,16 +122,26 @@ namespace NAudio.Wave
 				byte* output = (byte*)outputInterleavedBuffer;
 
 				// optimized mono to stereo
-				/*if (inputChannels == 1 && outputChannels >= 2)
+				if (inputChannels == 1 && outputChannels >= 2)
 					for (int i = 0; i < frames; i++)
 					{
-						var value = *input++;
-						output[0] = value;
-						output[1] = value;
-						output += outputChannels;
+						//left
+						*output++ = 0x69;
+						*output++ = input[inputChannels * 1 + 0];
+						*output++ = input[inputChannels * 0 + 0];
+						*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+
+						//right
+						*output++ = 0x69;
+						*output++ = input[inputChannels * 1 + 1];
+						*output++ = input[inputChannels * 0 + 1];
+						*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+
+						output += 4 * (outputChannels - 2);
+						input += 2 * inputChannels;
 					}
 				// optimized stereo to stereo
-				else*/ if (inputChannels == 2 && outputChannels == 2)
+				else if (inputChannels == 2 && outputChannels == 2)
 					for (int i = 0; i < frames / 2; i++)
 					{
 						//left
