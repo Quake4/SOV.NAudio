@@ -127,18 +127,18 @@ namespace NAudio.Wave
 					{
 						//left
 						*output++ = 0x69;
-						*output++ = input[inputChannels * 1 + 0];
-						*output++ = input[inputChannels * 0 + 0];
+						*output++ = input[1];
+						*output++ = input[0];
 						*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
 
 						//right
 						*output++ = 0x69;
-						*output++ = input[inputChannels * 1 + 1];
-						*output++ = input[inputChannels * 0 + 1];
+						*output++ = input[1];
+						*output++ = input[0];
 						*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
 
 						output += 4 * (outputChannels - 2);
-						input += 2 * inputChannels;
+						input += 2;
 					}
 				// optimized stereo to stereo
 				else if (inputChannels == 2 && outputChannels == 2)
