@@ -27,7 +27,7 @@ namespace SOV.NAudio
 			}
 		}
 
-		public WasapiOut(MMDevice device, AudioClientShareMode shareMode, bool useEventSync = false, int latency = 100)
+		public WasapiOut(MMDevice device, AudioClientShareMode shareMode, bool useEventSync = true, int latency = 100)
 			: base(device, shareMode, useEventSync, latency)
 		{
 		}
