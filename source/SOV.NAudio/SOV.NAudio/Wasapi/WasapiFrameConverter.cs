@@ -396,7 +396,6 @@ namespace NAudio.Wave
 		{
 			unsafe
 			{
-				// Use a trick (short instead of int to avoid any convertion from 16Bit to 32Bit)
 				int* input = (int*)inputInterleavedBuffer;
 				short* output = (short*)outputInterleavedBuffer;
 
