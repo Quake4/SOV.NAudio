@@ -244,8 +244,8 @@ namespace NAudio.Wave
             {
                 if (read < readLength)
                 {
-					// need to silence the end of the buffer as we have to pass frameCount
-					byte silence = sourceWaveFormat.Encoding == WaveFormatEncoding.DSD ? (byte)0x69 : (byte)0;
+                    // need to silence the end of the buffer as we have to pass frameCount
+                    byte silence = sourceWaveFormat.Encoding == WaveFormatEncoding.DSD ? (byte)0x69 : (byte)0;
                     unsafe
                     {
                         byte* pByte = (byte*)buffer;
@@ -299,7 +299,7 @@ namespace NAudio.Wave
 			throw new NotSupportedException("Can't find a supported format to use");
 		}
 
-		private WaveFormatExtensible GetFallbackFormat()
+        private WaveFormatExtensible GetFallbackFormat()
         {
             //var deviceSampleRate = audioClient.MixFormat.SampleRate;
             var deviceChannels = audioClient.MixFormat.Channels; // almost certain to be stereo
