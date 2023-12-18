@@ -262,6 +262,11 @@ namespace NAudio.Wave
 				return;
             }
 
+			string DesiredNotSupported(string format, int samplerate)
+			{
+				return $"Desired {format} sample rate '{samplerate}' is not supported.";
+			}
+
 			WaveFormatEncoding currentAsioMode() 
 			{
 				try
@@ -351,7 +356,7 @@ namespace NAudio.Wave
 					if (!CheckAndSetSampleRate(desiredSampleRate, false, waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD))
 					{
 						if (waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD)
-							throw new ArgumentException($"Desired DSD sample rate '{desiredSampleRate}' is not supported.");
+							throw new ArgumentException(DesiredNotSupported("DSD", desiredSampleRate));
 						else
 						{
 							// try resampler for pcm
@@ -371,7 +376,7 @@ namespace NAudio.Wave
 									}
 
 							if (!dmoResamplerUsed)
-								throw new ArgumentException($"Desired PCM sample rate '{waveProvider.WaveFormat.SampleRate}' is not supported.");
+								throw new ArgumentException(DesiredNotSupported("PCM", waveProvider.WaveFormat.SampleRate));
 						}
 					}
 				}
@@ -380,9 +385,8 @@ namespace NAudio.Wave
 					if (neededAsioMode() == WaveFormatEncoding.DSD)
 					{
 						desiredSampleRate = waveProvider.WaveFormat.SampleRate / 16;
-
 						if (!CheckAndSetSampleRate(desiredSampleRate, false))
-							throw new ArgumentException(ex.Message + $" Desired DoP sample rate '{desiredSampleRate}' is not supported.");
+							throw new ArgumentException(ex.Message + " " + DesiredNotSupported("DoP", desiredSampleRate));
 					}
 					else
 						throw;
@@ -627,7 +631,7 @@ namespace NAudio.Wave
         /// <returns>channel name</returns>
         public string AsioInputChannelName(int channel)
         {
-            return channel > DriverInputChannelCount ? "" : driver.Capabilities.InputChannelInfos[channel].name;
+            return channel > DriverInputChannelCount ? string.Empty : driver.Capabilities.InputChannelInfos[channel].name;
         }
 
         /// <summary>
@@ -637,7 +641,7 @@ namespace NAudio.Wave
         /// <returns>channel name</returns>
         public string AsioOutputChannelName(int channel)
         {
-            return channel > DriverOutputChannelCount ? "" : driver.Capabilities.OutputChannelInfos[channel].name;
+            return channel > DriverOutputChannelCount ? string.Empty : driver.Capabilities.OutputChannelInfos[channel].name;
         }
     }
 }

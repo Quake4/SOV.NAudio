@@ -19,7 +19,7 @@ namespace NAudio.Wave
         protected readonly AudioClientShareMode shareMode;
         private AudioRenderClient renderClient;
         private IWaveProvider sourceProvider;
-        private WaveFormat sourceWaveFormat;
+        protected WaveFormat sourceWaveFormat;
         private int latencyMilliseconds;
         private int bufferFrameCount;
         private int bytesPerFrame;
@@ -115,7 +115,8 @@ namespace NAudio.Wave
                 // fill a whole buffer
                 bufferFrameCount = audioClient.BufferSize;
                 bytesPerFrame = OutputWaveFormat.Channels * OutputWaveFormat.BitsPerSample / 8;
-                readBuffer = BufferHelpers.Ensure(readBuffer, bufferFrameCount * Math.Max(OutputWaveFormat.BlockAlign, sourceWaveFormat.BlockAlign));
+                readBuffer = BufferHelpers.Ensure(readBuffer, bufferFrameCount * Math.Max(OutputWaveFormat.BlockAlign,
+					(sourceWaveFormat.Encoding == WaveFormatEncoding.DSD ? 2 : 1) * sourceWaveFormat.BlockAlign));
                 if (FillBuffer(playbackProvider, bufferFrameCount))
                 {
                     // played a zero length stream - exit immediately
@@ -214,13 +215,22 @@ namespace NAudio.Wave
         private bool FillBuffer(IWaveProvider playbackProvider, int frameCount)
         {
             var readLength = frameCount * bytesPerFrame;
-			int read = playbackProvider.Read(readBuffer, 0, frameConverter == null ? readLength : (frameCount * sourceWaveFormat.BlockAlign));
+			var sourceReadLength = readLength;
+			var sourceBlockAligh = sourceWaveFormat.BlockAlign;
+			if (frameConverter != null)
+			{
+				if (sourceWaveFormat.Encoding == WaveFormatEncoding.DSD)
+					sourceBlockAligh = sourceWaveFormat.Channels * 2;
+				sourceReadLength = frameCount * sourceBlockAligh;
+			}
+
+			int read = playbackProvider.Read(readBuffer, 0, sourceReadLength);
 			if (read == 0) return true;
 
             var buffer = renderClient.GetBuffer(frameCount);
 			if (frameConverter != null)
 			{
-				var frames = read / sourceWaveFormat.BlockAlign;
+				var frames = read / sourceBlockAligh;
 				unsafe
 				{
 					fixed (void* pBuffer = readBuffer)
@@ -234,15 +244,13 @@ namespace NAudio.Wave
             {
                 if (read < readLength)
                 {
-                    // need to zero the end of the buffer as we have to
-                    // pass frameCount
+                    // need to silence the end of the buffer as we have to pass frameCount
+                    byte silence = sourceWaveFormat.Encoding == WaveFormatEncoding.DSD ? (byte)0x69 : (byte)0;
                     unsafe
                     {
                         byte* pByte = (byte*)buffer;
                         while(read < readLength)
-                        {
-                            pByte[read++] = 0;
-                        }
+                            pByte[read++] = silence;
                     }
                 }
 
@@ -259,6 +267,37 @@ namespace NAudio.Wave
             }
             return false;
         }
+
+		private WaveFormatExtensible GetDoPFormat()
+		{
+			var deviceChannels = audioClient.MixFormat.Channels; // almost certain to be stereo
+			var sampleRate = sourceWaveFormat.SampleRate / 16;
+
+			var channelCountsToTry = new List<int>() { sourceWaveFormat.Channels };
+			if (!channelCountsToTry.Contains(deviceChannels)) channelCountsToTry.Add(deviceChannels);
+			if (!channelCountsToTry.Contains(2)) channelCountsToTry.Add(2);
+
+			var bitDepthsToTry = new List<int>() { 32, 24 };
+
+			foreach (var channelCount in channelCountsToTry)
+			{
+				foreach (var bitDepth in bitDepthsToTry)
+				{
+					var format = new WaveFormatExtensible(sampleRate, bitDepth, channelCount);
+					if (audioClient.IsFormatSupported(shareMode, format))
+						return format;
+					// 24bit as 32bit
+					if (bitDepth == 32 && (sourceWaveFormat.BitsPerSample == 24 || sourceWaveFormat.BitsPerSample == 32))
+					{
+						format = new WaveFormatExtensible(sampleRate, 24, channelCount, 1);
+						if (audioClient.IsFormatSupported(shareMode, format))
+							return format;
+					}
+				}
+			}
+
+			throw new NotSupportedException("Can't find a supported format to use");
+		}
 
         private WaveFormatExtensible GetFallbackFormat()
         {
@@ -413,10 +452,6 @@ namespace NAudio.Wave
 
             long latencyRefTimes = latencyMilliseconds * 10000L;
             WaveFormat prevOutputWaveFormat = OutputWaveFormat;
-            //OutputWaveFormat = waveProvider.WaveFormat;
-
-			//if (OutputWaveFormat.Encoding == WaveFormatEncoding.DSD)
-			//	OutputWaveFormat = new WaveFormat(OutputWaveFormat.SampleRate / 16, 24, OutputWaveFormat.Channels);
 
             // allow auto sample rate conversion - works for shared mode
             var flags = AudioClientStreamFlags.AutoConvertPcm | AudioClientStreamFlags.SrcDefaultQuality;
@@ -426,52 +461,61 @@ namespace NAudio.Wave
             if (shareMode == AudioClientShareMode.Exclusive)
             {
                 flags = AudioClientStreamFlags.None;
-				var format = new WaveFormatExtensible(waveProvider.WaveFormat.SampleRate, waveProvider.WaveFormat.BitsPerSample,
-					waveProvider.WaveFormat.Channels, float32: waveProvider.WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat);
-				if (!audioClient.IsFormatSupported(shareMode, format/*, out WaveFormatExtensible closestSampleRateFormat*/) ||
-					format.ToStandardWaveFormat().Encoding != OutputWaveFormat.Encoding)
-                {
-                    // Use closesSampleRateFormat (in sharedMode, it equals usualy to the audioClient.MixFormat)
-                    // See documentation : http://msdn.microsoft.com/en-us/library/ms678737(VS.85).aspx 
-                    // They say : "In shared mode, the audio engine always supports the mix format"
-                    // The MixFormat is more likely to be a WaveFormatExtensible.
-                    //if (closestSampleRateFormat == null)
-                    //{
-                        InternalWaveFormat = GetFallbackFormat();
-					//}
-					//else
-					//{
-					//    OutputWaveFormat = closestSampleRateFormat.ToStandardWaveFormat();
-					//}
+				if (waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD)
+				{
+					InternalWaveFormat = GetDoPFormat();
+					frameConverter = WasapiFrameConverter.SelectFrameConverter(waveProvider.WaveFormat, OutputWaveFormat);
 					dmoResamplerNeeded = false;
-					var outWF = OutputWaveFormat;
-					frameConverter = WasapiFrameConverter.SelectFrameConverter(waveProvider.WaveFormat, outWF);
-					if (frameConverter == null && outWF.ToString() != waveProvider.WaveFormat.ToString())
+				}
+				else
+				{
+					var format = new WaveFormatExtensible(waveProvider.WaveFormat.SampleRate, waveProvider.WaveFormat.BitsPerSample,
+						waveProvider.WaveFormat.Channels, float32: waveProvider.WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat);
+					if (!audioClient.IsFormatSupported(shareMode, format/*, out WaveFormatExtensible closestSampleRateFormat*/) ||
+						format.ToStandardWaveFormat().Encoding != OutputWaveFormat.Encoding)
 					{
-						try
-						{
-							// just check that we can make it.
-							using (new ResamplerDmoStream(waveProvider, outWF, ResamplerDmoStream.MaxQuality))
-							{
-							}
-						}
-						catch (Exception)
-						{
-							// On Windows 10 some poorly coded drivers return a bad format in to closestSampleRateFormat
-							// In that case, try and fallback as if it provided no closest (e.g. force trying the mix format)
+						// Use closesSampleRateFormat (in sharedMode, it equals usualy to the audioClient.MixFormat)
+						// See documentation : http://msdn.microsoft.com/en-us/library/ms678737(VS.85).aspx 
+						// They say : "In shared mode, the audio engine always supports the mix format"
+						// The MixFormat is more likely to be a WaveFormatExtensible.
+						//if (closestSampleRateFormat == null)
+						//{
 							InternalWaveFormat = GetFallbackFormat();
-							using (new ResamplerDmoStream(waveProvider, outWF, ResamplerDmoStream.MaxQuality))
+						//}
+						//else
+						//{
+						//    OutputWaveFormat = closestSampleRateFormat.ToStandardWaveFormat();
+						//}
+						dmoResamplerNeeded = false;
+						var outWF = OutputWaveFormat;
+						frameConverter = WasapiFrameConverter.SelectFrameConverter(waveProvider.WaveFormat, outWF);
+						if (frameConverter == null && outWF.ToString() != waveProvider.WaveFormat.ToString())
+						{
+							try
 							{
+								// just check that we can make it.
+								using (new ResamplerDmoStream(waveProvider, outWF, ResamplerDmoStream.MaxQuality))
+								{
+								}
 							}
+							catch (Exception)
+							{
+								// On Windows 10 some poorly coded drivers return a bad format in to closestSampleRateFormat
+								// In that case, try and fallback as if it provided no closest (e.g. force trying the mix format)
+								InternalWaveFormat = GetFallbackFormat();
+								using (new ResamplerDmoStream(waveProvider, outWF, ResamplerDmoStream.MaxQuality))
+								{
+								}
+							}
+							dmoResamplerNeeded = true;
 						}
-						dmoResamplerNeeded = true;
 					}
-                }
-                else
-                {
-					InternalWaveFormat = format;
-					frameConverter = null;
-					dmoResamplerNeeded = false;
+					else
+					{
+						InternalWaveFormat = format;
+						frameConverter = null;
+						dmoResamplerNeeded = false;
+					}
 				}
 			}
 

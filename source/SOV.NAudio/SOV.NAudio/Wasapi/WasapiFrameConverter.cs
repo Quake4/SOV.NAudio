@@ -19,10 +19,22 @@ namespace NAudio.Wave
 
 		public static FrameConverter SelectFrameConverter(WaveFormat input, WaveFormat output)
 		{
-			if (input.SampleRate != output.SampleRate)
+			if (input.SampleRate != output.SampleRate && input.Encoding != WaveFormatEncoding.DSD)
 				return null;
 
-			if (output.Encoding == WaveFormatEncoding.Pcm)
+			if (input.Encoding == WaveFormatEncoding.DSD)
+			{
+				switch (output.BitsPerSample)
+				{
+					case 24:
+						return ConverterDSDTo24Generic;
+					case 32:
+						return ConverterDSDTo32Generic;
+					default:
+						throw new NotSupportedException($"Not a supported conversion {output.SetEncoding(WaveFormatEncoding.DoP)} for {input}.");
+				}
+			}
+			else if (output.Encoding == WaveFormatEncoding.Pcm)
 			{
 				switch (input.Encoding)
 				{
@@ -95,6 +107,200 @@ namespace NAudio.Wave
 
 			return null;
 		}
+
+		#region DoP
+
+		internal static void ConverterDSDTo24Generic(IntPtr inputInterleavedBuffer, int inputChannels, IntPtr outputInterleavedBuffer, int outputChannels, int frames)
+		{
+			unsafe
+			{
+				byte* input = (byte*)inputInterleavedBuffer;
+				byte* output = (byte*)outputInterleavedBuffer;
+
+				// optimized mono to stereo
+				if (inputChannels == 1 && outputChannels >= 2)
+					for (int i = 0; i < frames / 2; i++)
+					{
+						//left
+						*output++ = input[1];
+						*output++ = input[0];
+						*output++ = 0x05;
+
+						//right
+						*output++ = input[1];
+						*output++ = input[0];
+						*output++ = 0x05;
+
+						//left
+						*output++ = input[3];
+						*output++ = input[2];
+						*output++ = 0xFA;
+
+						//right
+						*output++ = input[3];
+						*output++ = input[2];
+						*output++ = 0xFA;
+
+						output += 6 * (outputChannels - 2);
+						input += 4;
+					}
+				// optimized stereo to stereo
+				else if (inputChannels == 2 && outputChannels == 2)
+					for (int i = 0; i < frames / 2; i++)
+					{
+						//left
+						*output++ = input[2];
+						*output++ = input[0];
+						*output++ = 0x05;
+
+						//right
+						*output++ = input[3];
+						*output++ = input[1];
+						*output++ = 0x05;
+
+						//left
+						*output++ = input[6];
+						*output++ = input[4];
+						*output++ = 0xFA;
+
+						//right
+						*output++ = input[7];
+						*output++ = input[5];
+						*output++ = 0xFA;
+
+						input += 4 * inputChannels;
+					}
+				// generic
+				else
+				{
+					var max = Math.Max(inputChannels, outputChannels);
+					var min = Math.Min(inputChannels, outputChannels);
+					for (int i = 0; i < frames; i++)
+					{
+						for (int j = 0; j < max; j++)
+						{
+							if (j < min)
+							{
+								*output++ = input[inputChannels * 1 + j];
+								*output++ = input[inputChannels * 0 + j];
+								*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+							}
+							if (j >= inputChannels)
+							{
+								*output++ = 0x69;
+								*output++ = 0x69;
+								*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+							}
+						}
+						input += 2 * inputChannels;
+					}
+				}
+			}
+		}
+
+		internal static void ConverterDSDTo32Generic(IntPtr inputInterleavedBuffer, int inputChannels, IntPtr outputInterleavedBuffer, int outputChannels, int frames)
+		{
+			unsafe
+			{
+				byte* input = (byte*)inputInterleavedBuffer;
+				byte* output = (byte*)outputInterleavedBuffer;
+
+				// optimized mono to stereo
+				if (inputChannels == 1 && outputChannels >= 2)
+					for (int i = 0; i < frames / 2; i++)
+					{
+						//left
+						*output++ = 0x69;
+						*output++ = input[1];
+						*output++ = input[0];
+						*output++ = 0x05;
+
+						//right
+						*output++ = 0x69;
+						*output++ = input[1];
+						*output++ = input[0];
+						*output++ = 0x05;
+
+						//left
+						*output++ = 0x69;
+						*output++ = input[3];
+						*output++ = input[2];
+						*output++ = 0xFA;
+
+						//right
+						*output++ = 0x69;
+						*output++ = input[3];
+						*output++ = input[2];
+						*output++ = 0xFA;
+
+						output += 8 * (outputChannels - 2);
+						input += 4;
+					}
+				// optimized stereo to stereo
+				else if (inputChannels == 2 && outputChannels == 2)
+					for (int i = 0; i < frames / 2; i++)
+					{
+						//left
+						//*output++ = (0x05 << 24) | (input[0] << 16) | (input[2] << 8) | 0x69;
+						*output++ = 0x69;
+						*output++ = input[2];
+						*output++ = input[0];
+						*output++ = 0x05;
+
+						//right
+						//*output++ = (0x05 << 24) | (input[1] << 16) | (input[3] << 8) | 0x69;
+						*output++ = 0x69;
+						*output++ = input[3];
+						*output++ = input[1];
+						*output++ = 0x05;
+
+						//left
+						//*output++ = (0xFA << 24) | (input[4] << 16) | (input[6] << 8) | 0x69;
+						*output++ = 0x69;
+						*output++ = input[6];
+						*output++ = input[4];
+						*output++ = 0xFA;
+
+						//right
+						//*output++ = (0xFA << 24) | (input[5] << 16) | (input[7] << 8) | 0x69;
+						*output++ = 0x69;
+						*output++ = input[7];
+						*output++ = input[5];
+						*output++ = 0xFA;
+
+						input += 4 * inputChannels;
+					}
+				// generic
+				else
+				{
+					var max = Math.Max(inputChannels, outputChannels);
+					var min = Math.Min(inputChannels, outputChannels);
+					for (int i = 0; i < frames; i++)
+					{
+						for (int j = 0; j < max; j++)
+						{
+							if (j < min)
+							{
+								*output++ = 0x69;
+								*output++ = input[inputChannels * 1 + j];
+								*output++ = input[inputChannels * 0 + j];
+								*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+							}
+							if (j >= inputChannels)
+							{
+								*output++ = 0x69;
+								*output++ = 0x69;
+								*output++ = 0x69;
+								*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+							}
+						}
+						input += 2 * inputChannels;
+					}
+				}
+			}
+		}
+
+		#endregion
 
 		#region PCM
 
