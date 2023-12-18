@@ -19,10 +19,7 @@ namespace SOV.NAudio
 					return audioClient.MixFormat;
 				var format = InternalWaveFormat.ToStandardWaveFormat(true);
 				if (sourceWaveFormat.Encoding == WaveFormatEncoding.DSD)
-				{
-					var myFieldInfo = format.GetType().GetField("waveFormatTag", BindingFlags.NonPublic | BindingFlags.Instance);
-					myFieldInfo.SetValue(format, WaveFormatEncoding.DoP);
-				}
+					format.SetEncoding(WaveFormatEncoding.DoP);
 				return format;
 			}
 		}
