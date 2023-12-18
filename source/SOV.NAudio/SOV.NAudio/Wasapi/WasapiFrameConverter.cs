@@ -31,7 +31,7 @@ namespace NAudio.Wave
 					case 32:
 						return ConverterDSDTo32Generic;
 					default:
-						throw new Exception($"Not a supported conversion {output.SetEncoding(WaveFormatEncoding.DoP)} for {input}.");
+						throw new NotSupportedException($"Not a supported conversion {output.SetEncoding(WaveFormatEncoding.DoP)} for {input}.");
 				}
 			}
 			else if (output.Encoding == WaveFormatEncoding.Pcm)
