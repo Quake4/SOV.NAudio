@@ -22,8 +22,8 @@ namespace NAudio.Wave
 			if (input.SampleRate != output.SampleRate && input.Encoding != WaveFormatEncoding.DSD)
 				return null;
 
-            if (input.Encoding == WaveFormatEncoding.DSD)
-            {
+			if (input.Encoding == WaveFormatEncoding.DSD)
+			{
 				switch (output.BitsPerSample)
 				{
 					case 24:
@@ -119,20 +119,30 @@ namespace NAudio.Wave
 
 				// optimized mono to stereo
 				if (inputChannels == 1 && outputChannels >= 2)
-					for (int i = 0; i < frames; i++)
+					for (int i = 0; i < frames / 2; i++)
 					{
 						//left
 						*output++ = input[1];
 						*output++ = input[0];
-						*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+						*output++ = 0x05;
 
 						//right
 						*output++ = input[1];
 						*output++ = input[0];
-						*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+						*output++ = 0x05;
 
-						output += 3 * (outputChannels - 2);
-						input += 2;
+						//left
+						*output++ = input[3];
+						*output++ = input[2];
+						*output++ = 0xFA;
+
+						//right
+						*output++ = input[3];
+						*output++ = input[2];
+						*output++ = 0xFA;
+
+						output += 6 * (outputChannels - 2);
+						input += 4;
 					}
 				// optimized stereo to stereo
 				else if (inputChannels == 2 && outputChannels == 2)
@@ -197,22 +207,34 @@ namespace NAudio.Wave
 
 				// optimized mono to stereo
 				if (inputChannels == 1 && outputChannels >= 2)
-					for (int i = 0; i < frames; i++)
+					for (int i = 0; i < frames / 2; i++)
 					{
 						//left
 						*output++ = 0x69;
 						*output++ = input[1];
 						*output++ = input[0];
-						*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+						*output++ = 0x05;
 
 						//right
 						*output++ = 0x69;
 						*output++ = input[1];
 						*output++ = input[0];
-						*output++ = (i & 1) > 0 ? (byte)0xFA : (byte)0x05;
+						*output++ = 0x05;
 
-						output += 4 * (outputChannels - 2);
-						input += 2;
+						//left
+						*output++ = 0x69;
+						*output++ = input[3];
+						*output++ = input[2];
+						*output++ = 0xFA;
+
+						//right
+						*output++ = 0x69;
+						*output++ = input[3];
+						*output++ = input[2];
+						*output++ = 0xFA;
+
+						output += 8 * (outputChannels - 2);
+						input += 4;
 					}
 				// optimized stereo to stereo
 				else if (inputChannels == 2 && outputChannels == 2)
