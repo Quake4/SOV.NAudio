@@ -464,8 +464,6 @@ namespace NAudio.Wave
 				if (waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD)
 				{
 					InternalWaveFormat = GetDoPFormat();
-					//OutputWaveFormat = WaveFormat.CreateCustomFormat(WaveFormatEncoding.DoP,
-					//	desiredSampleRate, OutputWaveFormat.Channels, OutputWaveFormat.AverageBytesPerSecond, OutputWaveFormat.BlockAlign, OutputWaveFormat.BitsPerSample);
 					frameConverter = WasapiFrameConverter.SelectFrameConverter(waveProvider.WaveFormat, OutputWaveFormat);
 					dmoResamplerNeeded = false;
 				}
@@ -482,7 +480,7 @@ namespace NAudio.Wave
 						// The MixFormat is more likely to be a WaveFormatExtensible.
 						//if (closestSampleRateFormat == null)
 						//{
-						InternalWaveFormat = GetFallbackFormat();
+							InternalWaveFormat = GetFallbackFormat();
 						//}
 						//else
 						//{
