@@ -244,15 +244,13 @@ namespace NAudio.Wave
             {
                 if (read < readLength)
                 {
-                    // need to zero the end of the buffer as we have to
-                    // pass frameCount
+					// need to silence the end of the buffer as we have to pass frameCount
+					byte silence = sourceWaveFormat.Encoding == WaveFormatEncoding.DSD ? (byte)0x69 : (byte)0;
                     unsafe
                     {
                         byte* pByte = (byte*)buffer;
                         while(read < readLength)
-                        {
-                            pByte[read++] = 0;
-                        }
+                            pByte[read++] = silence;
                     }
                 }
 
