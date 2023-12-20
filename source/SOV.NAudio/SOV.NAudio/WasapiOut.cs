@@ -1,6 +1,6 @@
 ﻿using NAudio.CoreAudioApi;
 using NAudio.Wave;
-using System.Reflection;
+using System.Collections.Generic;
 using NAud = NAudio;
 
 namespace SOV.NAudio
@@ -24,8 +24,8 @@ namespace SOV.NAudio
 			}
 		}
 
-		public WasapiOut(MMDevice device, AudioClientShareMode shareMode, bool useEventSync = true, int latency = 100)
-			: base(device, shareMode, useEventSync, latency)
+		public WasapiOut(MMDevice device, AudioClientShareMode shareMode, IDictionary<WaveFormatEncoding, int[]> samplerate, bool useEventSync = true, int latency = 100)
+			: base(device, shareMode, useEventSync, latency, samplerate)
 		{
 		}
 	}

@@ -3,6 +3,7 @@ using NAudio.CoreAudioApi.Interfaces;
 using NAudio.Utils;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -32,6 +33,7 @@ namespace NAudio.Wave
         protected bool dmoResamplerNeeded;
 		WaveFormatExtensible internalWaveFormat;
 		WasapiFrameConverter.FrameConverter frameConverter;
+		protected readonly IDictionary<WaveFormatEncoding, int[]> sampleRate;
 
 		/// <summary>
 		/// Playback Stopped
@@ -77,9 +79,10 @@ namespace NAudio.Wave
         /// <param name="shareMode"></param>
         /// <param name="useEventSync">true if sync is done with event. false use sleep.</param>
         /// <param name="latency">Desired latency in milliseconds</param>
-        public WasapiOut(MMDevice device, AudioClientShareMode shareMode, bool useEventSync, int latency)
+        public WasapiOut(MMDevice device, AudioClientShareMode shareMode, bool useEventSync, int latency, IDictionary<WaveFormatEncoding, int[]> samplerate = null)
         {
-            audioClient = device.AudioClient;
+			sampleRate = samplerate;
+			audioClient = device.AudioClient;
             mmDevice = device;
             this.shareMode = shareMode;
             isUsingEventSync = useEventSync;
@@ -268,73 +271,67 @@ namespace NAudio.Wave
             return false;
         }
 
-		private WaveFormatExtensible GetDoPFormat(WaveFormat source)
-		{
-			var deviceChannels = audioClient.MixFormat.Channels; // almost certain to be stereo
-			var sampleRate = source.SampleRate / 16;
-
-			var channelCountsToTry = new List<int>() { source.Channels };
-			if (!channelCountsToTry.Contains(deviceChannels)) channelCountsToTry.Add(deviceChannels);
-			if (!channelCountsToTry.Contains(2)) channelCountsToTry.Add(2);
-
-			var bitDepthsToTry = new List<int>() { 32, 24 };
-
-			foreach (var channelCount in channelCountsToTry)
-			{
-				foreach (var bitDepth in bitDepthsToTry)
-				{
-					var format = new WaveFormatExtensible(sampleRate, bitDepth, channelCount);
-					if (audioClient.IsFormatSupported(shareMode, format))
-						return format;
-					// 24bit as 32bit
-					if (bitDepth == 32 && (source.BitsPerSample == 24 || source.BitsPerSample == 32))
-					{
-						format = new WaveFormatExtensible(sampleRate, 24, channelCount, 1);
-						if (audioClient.IsFormatSupported(shareMode, format))
-							return format;
-					}
-				}
-			}
-
-			throw new NotSupportedException("Can't find a supported format to use");
-		}
-
-        private WaveFormatExtensible GetFallbackFormat(WaveFormat source)
+        private WaveFormatExtensible GetFallbackFormat(WaveFormat source, bool dop = false)
         {
-            //var deviceSampleRate = audioClient.MixFormat.SampleRate;
             var deviceChannels = audioClient.MixFormat.Channels; // almost certain to be stereo
 
 			// we are in exclusive mode
 			// First priority is to try the sample rate you provided.
-			var sampleRatesToTry = new List<int>();
-			var sampleRatesToTryLower = new List<int>();
-			// And if we've not already got 44.1 and 48kHz in the list, let's try them too
-			var baseSampleRate = source.SampleRate % 44100 == 0 ? 44100 : 48000;
-			for (int i = 1; i < (1 << 4); i = i << 1)
+			var sampleRatesToTry = new List<int>(10);
+
+			var channelCountsToTry = new List<int>(3) { source.Channels };
+			if (!channelCountsToTry.Contains(deviceChannels)) channelCountsToTry.Add(deviceChannels);
+			if (!channelCountsToTry.Contains(2)) channelCountsToTry.Add(2);
+
+			var bitDepthsToTry = new List<int>(4);
+
+			int[] sr_values = null;
+			int samplerate = source.SampleRate;
+			var formatEncoding = WaveFormatEncoding.Pcm;
+
+			if (dop)
 			{
-				var sr = i * baseSampleRate;
-				if (sr < source.SampleRate)
-					sampleRatesToTryLower.Add(sr);
-				else
-					sampleRatesToTry.Add(sr);
+				formatEncoding = WaveFormatEncoding.DoP;
+				samplerate = source.SampleRate / 16;
+				sampleRatesToTry.Add(samplerate);
+				bitDepthsToTry.Add(32);
+				bitDepthsToTry.Add(24);
+
+				if (sampleRate != null && sampleRate.ContainsKey(formatEncoding))
+					sr_values = sampleRate[formatEncoding];
 			}
-			// Add lower as reverse
-			sampleRatesToTryLower.Reverse();
-			sampleRatesToTry.AddRange(sampleRatesToTryLower);
-			// Last priority is to use the sample rate the device wants
-			//if (!sampleRatesToTry.Contains(deviceSampleRate)) sampleRatesToTry.Add(deviceSampleRate);
+			else
+			{
+				var sampleRatesToTryLower = new List<int>();
+				// And if we've not already got 44.1 and 48kHz in the list, let's try them too
+				var baseSampleRate = source.SampleRate % 44100 == 0 ? 44100 : 48000;
+				for (int i = 1; i < (1 << 4); i = i << 1)
+				{
+					var sr = i * baseSampleRate;
+					if (sr < source.SampleRate)
+						sampleRatesToTryLower.Add(sr);
+					else
+						sampleRatesToTry.Add(sr);
+				}
+				// Add lower as reverse
+				sampleRatesToTryLower.Reverse();
+				sampleRatesToTry.AddRange(sampleRatesToTryLower);
+				// Last priority is to use the sample rate the device wants
+				//if (!sampleRatesToTry.Contains(deviceSampleRate)) sampleRatesToTry.Add(deviceSampleRate);
 
-			var channelCountsToTry = new List<int>() { source.Channels };
-            if (!channelCountsToTry.Contains(deviceChannels)) channelCountsToTry.Add(deviceChannels);
-            if (!channelCountsToTry.Contains(2)) channelCountsToTry.Add(2);
+				bitDepthsToTry.Add(source.BitsPerSample);
+				if (!bitDepthsToTry.Contains(32)) bitDepthsToTry.Add(32);
+				if (!bitDepthsToTry.Contains(24)) bitDepthsToTry.Add(24);
+				if (!bitDepthsToTry.Contains(16)) bitDepthsToTry.Add(16);
 
-            var bitDepthsToTry = new List<int>() { source.BitsPerSample };
-            if (!bitDepthsToTry.Contains(32)) bitDepthsToTry.Add(32);
-            if (!bitDepthsToTry.Contains(24)) bitDepthsToTry.Add(24);
-            if (!bitDepthsToTry.Contains(16)) bitDepthsToTry.Add(16);
+				if (sampleRate != null && sampleRate.ContainsKey(WaveFormatEncoding.Pcm))
+					sr_values = sampleRate[WaveFormatEncoding.Pcm];
+			}
 
-            foreach (var sampleRate in sampleRatesToTry)
+			foreach (var sampleRate in sampleRatesToTry)
             {
+				// check sample rate
+				if (sr_values != null && !sr_values.Contains(sampleRate)) continue;
                 foreach (var channelCount in channelCountsToTry)
                 {
                     foreach (var bitDepth in bitDepthsToTry)
@@ -352,31 +349,9 @@ namespace NAudio.Wave
 					}
 				}
             }
-            throw new NotSupportedException("Can't find a supported format to use");
-        }
 
-        /// <summary>
-        /// Gets the current position in bytes from the wave output device.
-        /// (n.b. this is not the same thing as the position within your reader
-        /// stream)
-        /// </summary>
-        /// <returns>Position in bytes</returns>
-        /*public long GetPosition()
-        {
-            ulong pos;
-            switch (playbackState)
-            {
-                case PlaybackState.Stopped:
-                    return 0;
-                case PlaybackState.Playing:
-                    pos = audioClient.AudioClockClient.AdjustedPosition;
-                    break;
-                default: // PlaybackState.Paused
-                    audioClient.AudioClockClient.GetPosition(out pos, out _);
-                    break;
-            }
-            return ((long)pos * OutputWaveFormat.AverageBytesPerSecond) / (long)audioClient.AudioClockClient.Frequency;
-        }*/
+            throw new NotSupportedException($"Desired {formatEncoding} sample rate '{samplerate}' dosn't supported or disabled.");
+        }
 
 		public WaveFormatExtensible InternalWaveFormat
 		{
@@ -463,16 +438,20 @@ namespace NAudio.Wave
                 flags = AudioClientStreamFlags.None;
 				if (waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD)
 				{
-					InternalWaveFormat = GetDoPFormat(waveProvider.WaveFormat);
+					InternalWaveFormat = GetFallbackFormat(waveProvider.WaveFormat, true);
 					frameConverter = WasapiFrameConverter.SelectFrameConverter(waveProvider.WaveFormat, OutputWaveFormat);
 					dmoResamplerNeeded = false;
 				}
 				else
 				{
+					bool skip_sr = false;
+					if (sampleRate != null && sampleRate.ContainsKey(WaveFormatEncoding.Pcm))
+						if (sampleRate[WaveFormatEncoding.Pcm] != null && !sampleRate[WaveFormatEncoding.Pcm].Contains(waveProvider.WaveFormat.SampleRate))
+							skip_sr = true;
 					var format = new WaveFormatExtensible(waveProvider.WaveFormat.SampleRate, waveProvider.WaveFormat.BitsPerSample,
 						waveProvider.WaveFormat.Channels, float32: waveProvider.WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat);
-					if (!audioClient.IsFormatSupported(shareMode, format/*, out WaveFormatExtensible closestSampleRateFormat*/) ||
-						format.ToStandardWaveFormat().Encoding != OutputWaveFormat.Encoding)
+					if (skip_sr || format.ToStandardWaveFormat().Encoding != OutputWaveFormat.Encoding ||
+						!audioClient.IsFormatSupported(shareMode, format/*, out WaveFormatExtensible closestSampleRateFormat*/))
 					{
 						// Use closesSampleRateFormat (in sharedMode, it equals usualy to the audioClient.MixFormat)
 						// See documentation : http://msdn.microsoft.com/en-us/library/ms678737(VS.85).aspx 

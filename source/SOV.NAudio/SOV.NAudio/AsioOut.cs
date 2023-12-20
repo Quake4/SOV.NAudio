@@ -1,4 +1,5 @@
 ﻿using NAudio.Wave;
+using System.Collections.Generic;
 using NAud = NAudio;
 
 namespace SOV.NAudio
@@ -9,8 +10,8 @@ namespace SOV.NAudio
 
 		public WaveFormat WaveFormat => OutputWaveFormat;
 
-		public AsioOut(string driverName)
-			: base(driverName)
+		public AsioOut(string driverName, IDictionary<WaveFormatEncoding, int[]> samplerate)
+			: base(driverName, samplerate)
 		{
 		}
 	}

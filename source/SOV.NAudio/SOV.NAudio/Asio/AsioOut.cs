@@ -36,7 +36,8 @@ namespace NAudio.Wave
 		protected bool dmoResamplerUsed;
 		protected WaveFormat dmoResamplerFormat;
 		protected ResamplerDmoStream dmoResampler;
-		protected IList<int> blackListedSampleRates = new List<int>();
+		protected readonly IList<int> blackListedSampleRates = new List<int>();
+		protected IDictionary<WaveFormatEncoding, int[]> sampleRate;
 
 		/// <summary>
 		/// Playback Stopped
@@ -66,17 +67,17 @@ namespace NAudio.Wave
         /// Initializes a new instance of the <see cref="AsioOut"/> class with the driver name.
         /// </summary>
         /// <param name="driverName">Name of the device.</param>
-        public AsioOut(string driverName)
+        public AsioOut(string driverName, IDictionary<WaveFormatEncoding, int[]> samplerate = null)
         {
             syncContext = SynchronizationContext.Current;
-            InitFromName(driverName);
+            InitFromName(driverName, samplerate);
         }
 
         /// <summary>
         /// Opens an ASIO output device
         /// </summary>
         /// <param name="driverIndex">Device number (zero based)</param>
-        public AsioOut(int driverIndex)
+        public AsioOut(int driverIndex, IDictionary<WaveFormatEncoding, int[]> samplerate = null)
         {
             syncContext = SynchronizationContext.Current; 
             String[] names = GetDriverNames();
@@ -88,7 +89,7 @@ namespace NAudio.Wave
             {
                 throw new ArgumentException(String.Format("Invalid device number. Must be in the range [0,{0}]", names.Length));
             }
-            InitFromName(names[driverIndex]);
+            InitFromName(names[driverIndex], samplerate);
         }
 
         /// <summary>
@@ -153,12 +154,13 @@ namespace NAudio.Wave
         /// Inits the driver from the asio driver name.
         /// </summary>
         /// <param name="driverName">Name of the driver.</param>
-        private void InitFromName(string driverName)
+        private void InitFromName(string driverName, IDictionary<WaveFormatEncoding, int[]> samplerate)
         {
             this.driverName = driverName;
+			sampleRate = samplerate;
 
-            // Get the basic driver
-            AsioDriver basicDriver = AsioDriver.GetAsioDriverByName(driverName);
+			// Get the basic driver
+			AsioDriver basicDriver = AsioDriver.GetAsioDriverByName(driverName);
 
             try
             {
@@ -264,7 +266,7 @@ namespace NAudio.Wave
 
 			string DesiredNotSupported(string format, int samplerate)
 			{
-				return $"Desired {format} sample rate '{samplerate}' is not supported.";
+				return $"Desired {format} sample rate '{samplerate}' dosn't supported or disabled.";
 			}
 
 			WaveFormatEncoding currentAsioMode() 
@@ -296,17 +298,29 @@ namespace NAudio.Wave
 				}
 			}
 
-			bool CheckAndSetSampleRate(int sampleRate, bool rise = false, bool pcm = true)
+			bool CheckAndSetSampleRate(int sr, bool rise, WaveFormatEncoding encoding, bool pcm = true)
 			{
+				// check allowed
+				if (sampleRate != null && sampleRate.ContainsKey(encoding))
+				{
+					var values = sampleRate[encoding];
+					if (values != null && !values.Contains(sr))
+					{
+						if (rise)
+							throw new ArgumentException(DesiredNotSupported(encoding.ToString(), sr));
+						return false;
+					}
+				}
+
 				bool setted = true;
-				if (driver.Capabilities.SampleRate != sampleRate)
+				if (driver.Capabilities.SampleRate != sr)
 				{
 					try
 					{
-						if ((!pcm || pcm && !blackListedSampleRates.Any(p => p == sampleRate)) &&
-							driver.IsSampleRateSupported(sampleRate))
+						if ((!pcm || pcm && !blackListedSampleRates.Any(p => p == sr)) &&
+							driver.IsSampleRateSupported(sr))
 						{
-							driver.SetSampleRate(sampleRate);
+							driver.SetSampleRate(sr);
 							if (isInitialized)
 							{
 								driver.DisposeBuffers();
@@ -324,12 +338,12 @@ namespace NAudio.Wave
 					{
 						setted = false;
 						if (pcm) //PCM
-							blackListedSampleRates.Add(sampleRate);
+							blackListedSampleRates.Add(sr);
 						else // DSD
 							switchAsioMode(AsioIoFormatType.PCMFormat);
 						// fix realtek bufferupdate call - reinit as fact
-						driver.SetSampleRate(sampleRate % 44100 == 0 ? 48000 : 44100);
-						driver.SetSampleRate(sampleRate % 48000 == 0 ? 44100 : 48000);
+						driver.SetSampleRate(sr % 44100 == 0 ? 48000 : 44100);
+						driver.SetSampleRate(sr % 48000 == 0 ? 44100 : 48000);
 						if (rise)
 							throw;
 					}
@@ -353,7 +367,9 @@ namespace NAudio.Wave
 					if (currentAsioMode() != neededAsioMode())
 						switchAsioMode(waveProvider.WaveFormat.BitsPerSample == 1 ? AsioIoFormatType.DSDFormat : AsioIoFormatType.PCMFormat);
 
-					if (!CheckAndSetSampleRate(desiredSampleRate, false, waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD))
+					if (!CheckAndSetSampleRate(desiredSampleRate, false,
+						waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD ? WaveFormatEncoding.Pcm : WaveFormatEncoding.DSD,
+						waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD))
 					{
 						if (waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD)
 							throw new ArgumentException(DesiredNotSupported("DSD", desiredSampleRate));
@@ -362,7 +378,7 @@ namespace NAudio.Wave
 							// try resampler for pcm
 							if (desiredSampleRate % 44100 == 0 || desiredSampleRate % 48000 == 0)
 								while (!dmoResamplerUsed && (desiredSampleRate >>= 1) >= 44100)
-									if (CheckAndSetSampleRate(desiredSampleRate, false))
+									if (CheckAndSetSampleRate(desiredSampleRate, false, WaveFormatEncoding.Pcm))
 									{
 										try
 										{
@@ -385,7 +401,7 @@ namespace NAudio.Wave
 					if (neededAsioMode() == WaveFormatEncoding.DSD)
 					{
 						desiredSampleRate = waveProvider.WaveFormat.SampleRate / 16;
-						if (!CheckAndSetSampleRate(desiredSampleRate, false))
+						if (!CheckAndSetSampleRate(desiredSampleRate, false, WaveFormatEncoding.DoP))
 							throw new ArgumentException(ex.Message + " " + DesiredNotSupported("DoP", desiredSampleRate));
 					}
 					else
@@ -435,7 +451,9 @@ namespace NAudio.Wave
             else
                 NumberOfOutputChannels = 0;
 
-			CheckAndSetSampleRate(desiredSampleRate, true, OutputWaveFormat.Encoding != WaveFormatEncoding.DSD);
+			CheckAndSetSampleRate(desiredSampleRate, true,
+				waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD ? WaveFormatEncoding.Pcm : WaveFormatEncoding.DSD,
+				OutputWaveFormat.Encoding != WaveFormatEncoding.DSD);
 
             if (!isInitialized)
             {
