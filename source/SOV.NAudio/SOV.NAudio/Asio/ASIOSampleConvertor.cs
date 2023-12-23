@@ -220,27 +220,15 @@ namespace NAudio.Wave.Asio
 			{
 				int channels = asioOutputBuffers.Length;
 				byte* inputSamples = (byte*)inputInterleavedBuffer;
-				byte*[] samples = new byte*[channels];
+				int*[] samples = new int*[channels];
 				for (int i = 0; i < channels; i++)
-					samples[i] = (byte*)asioOutputBuffers[i];
+					samples[i] = (int*)asioOutputBuffers[i];
 
-				byte value;
 				// optimized mono to stereo
 				if (nbChannels == 1 && channels >= 2)
 					for (int i = 0; i < nbSamples; i++)
 					{
-						*samples[0]++ = 0;
-						*samples[1]++ = 0;
-
-						value = *inputSamples++;
-						*samples[0]++ = value;
-						*samples[1]++ = value;
-
-						value = *inputSamples++;
-						*samples[0]++ = value;
-						*samples[1]++ = value;
-
-						value = *inputSamples++;
+						int value = (*inputSamples++ << 8) | (*inputSamples++ << 16) | (*inputSamples++ << 24);
 						*samples[0]++ = value;
 						*samples[1]++ = value;
 					}
@@ -248,15 +236,8 @@ namespace NAudio.Wave.Asio
 				else if (nbChannels == 2 && channels == 2)
 					for (int i = 0; i < nbSamples; i++)
 					{
-						*samples[0]++ = 0;
-						*samples[0]++ = *inputSamples++;
-						*samples[0]++ = *inputSamples++;
-						*samples[0]++ = *inputSamples++;
-
-						*samples[1]++ = 0;
-						*samples[1]++ = *inputSamples++;
-						*samples[1]++ = *inputSamples++;
-						*samples[1]++ = *inputSamples++;
+						*samples[0]++ = (*inputSamples++ << 8) | (*inputSamples++ << 16) | (*inputSamples++ << 24);
+						*samples[1]++ = (*inputSamples++ << 8) | (*inputSamples++ << 16) | (*inputSamples++ << 24);
 					}
 				// generic
 				else
@@ -264,21 +245,11 @@ namespace NAudio.Wave.Asio
 						for (int j = 0; j < Math.Max(nbChannels, channels); j++)
 						{
 							if (j < Math.Min(nbChannels, channels))
-							{
-								*samples[j]++ = 0;
-								*samples[j]++ = *inputSamples++;
-								*samples[j]++ = *inputSamples++;
-								*samples[j]++ = *inputSamples++;
-							}
+								*samples[j]++ = (*inputSamples++ << 8) | (*inputSamples++ << 16) | (*inputSamples++ << 24);
 							else if (j >= channels)
 								inputSamples += 3;
 							if (j >= nbChannels)
-							{
 								*samples[j]++ = 0;
-								*samples[j]++ = 0;
-								*samples[j]++ = 0;
-								*samples[j]++ = 0;
-							}
 						}
 			}
         }
