@@ -541,7 +541,7 @@ namespace NAudio.Wave
 						syncContext.Post(s => Stop(), null);
 					else
 					{
-						var thread = new Thread(() => Stop());
+						var thread = new Thread(() => { try { Stop(); } catch { }; });
 						thread.SetApartmentState(ApartmentState.STA);
 						thread.Start();
 					}
