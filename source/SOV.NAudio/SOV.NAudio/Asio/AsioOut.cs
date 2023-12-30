@@ -23,7 +23,7 @@ namespace NAudio.Wave
         private AsioDriverExt driver;
         private IWaveProvider sourceStream;
         private WaveFormat sourceWaveFormat;
-        private PlaybackState playbackState;
+        private volatile PlaybackState playbackState;
         private int nbSamples;
         private byte[] waveBuffer;
         private AsioSampleConvertor.SampleConvertor convertor;
@@ -31,7 +31,7 @@ namespace NAudio.Wave
 
         private readonly SynchronizationContext syncContext;
         private bool isInitialized;
-		private bool isSendStop;
+		private volatile bool isSendStop;
 
 		protected bool dmoResamplerUsed;
 		protected WaveFormat dmoResamplerFormat;
@@ -218,8 +218,8 @@ namespace NAudio.Wave
         /// </summary>
         public void Stop()
         {
-            playbackState = PlaybackState.Stopped;
 			driver.Stop();
+			playbackState = PlaybackState.Stopped;
 			isSendStop = false;
             RaisePlaybackStopped(null);
         }
@@ -229,15 +229,15 @@ namespace NAudio.Wave
         /// </summary>
         public void Pause()
         {
-            playbackState = PlaybackState.Paused;
             driver.Stop();
-        }
+			playbackState = PlaybackState.Paused;
+		}
 
-        /// <summary>
-        /// Initialises to play
-        /// </summary>
-        /// <param name="waveProvider">Source wave provider</param>
-        public void Init(IWaveProvider waveProvider)
+		/// <summary>
+		/// Initialises to play
+		/// </summary>
+		/// <param name="waveProvider">Source wave provider</param>
+		public void Init(IWaveProvider waveProvider)
         {
             InitRecordAndPlayback(waveProvider, 0, -1);
         }
@@ -513,7 +513,7 @@ namespace NAudio.Wave
 
 			if (this.NumberOfOutputChannels > 0)
 			{
-				int read = sourceStream.Read(waveBuffer, 0, waveBuffer.Length);
+				int read = playbackState == PlaybackState.Playing ? sourceStream.Read(waveBuffer, 0, waveBuffer.Length) : 0;
 				if (read < waveBuffer.Length)
 				{
 					// we have reached the end of the input data - clear out the end
@@ -534,7 +534,7 @@ namespace NAudio.Wave
 					}
 				}
 
-				if (read == 0 && !isSendStop)
+				if (read == 0 && !isSendStop && playbackState == PlaybackState.Playing)
 				{
 					isSendStop = true;
 					if (syncContext != null)
