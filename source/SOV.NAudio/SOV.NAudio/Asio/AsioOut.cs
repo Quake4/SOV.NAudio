@@ -517,7 +517,7 @@ namespace NAudio.Wave
 				try
 				{
 					if (playbackState == PlaybackState.Playing)
-						sourceStream.Read(waveBuffer, 0, waveBuffer.Length);
+						read = sourceStream.Read(waveBuffer, 0, waveBuffer.Length);
 				}
 				catch { }
 				if (read < waveBuffer.Length)
