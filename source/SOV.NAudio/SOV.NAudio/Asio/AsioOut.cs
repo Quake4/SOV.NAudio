@@ -513,7 +513,13 @@ namespace NAudio.Wave
 
 			if (this.NumberOfOutputChannels > 0)
 			{
-				int read = playbackState == PlaybackState.Playing ? sourceStream.Read(waveBuffer, 0, waveBuffer.Length) : 0;
+				int read = 0;
+				try
+				{
+					if (playbackState == PlaybackState.Playing)
+						sourceStream.Read(waveBuffer, 0, waveBuffer.Length);
+				}
+				catch { }
 				if (read < waveBuffer.Length)
 				{
 					// we have reached the end of the input data - clear out the end
