@@ -20,7 +20,7 @@ namespace NAudio.Wave
 	/// </summary>
 	public class AsioOut : IWavePlayer
     {
-        private AsioDriverExt driver;
+        private volatile AsioDriverExt driver;
         private IWaveProvider sourceStream;
         private WaveFormat sourceWaveFormat;
         private volatile PlaybackState playbackState;
@@ -108,10 +108,7 @@ namespace NAudio.Wave
         {
             if (driver != null)
             {
-                if (playbackState != PlaybackState.Stopped)
-                {
-                    driver.Stop();
-                }
+				Stop();
                 driver.ResetRequestCallback = null;
                 driver.ReleaseDriver();
                 driver = null;
@@ -218,10 +215,13 @@ namespace NAudio.Wave
         /// </summary>
         public void Stop()
         {
-			driver.Stop();
-			playbackState = PlaybackState.Stopped;
-			isSendStop = false;
-            RaisePlaybackStopped(null);
+			if (playbackState != PlaybackState.Stopped)
+			{
+				driver.Stop();
+				playbackState = PlaybackState.Stopped;
+				isSendStop = false;
+				RaisePlaybackStopped(null);
+			}
         }
 
         /// <summary>
