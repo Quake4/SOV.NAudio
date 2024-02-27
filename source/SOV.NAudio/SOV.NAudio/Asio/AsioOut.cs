@@ -69,7 +69,7 @@ namespace NAudio.Wave
         /// <param name="driverName">Name of the device.</param>
         public AsioOut(string driverName, IDictionary<WaveFormatEncoding, int[]> samplerate = null)
         {
-            syncContext = SynchronizationContext.Current;
+            syncContext = SynchronizationContext.Current ?? new SynchronizationContext();
             InitFromName(driverName, samplerate);
         }
 
@@ -79,7 +79,7 @@ namespace NAudio.Wave
         /// <param name="driverIndex">Device number (zero based)</param>
         public AsioOut(int driverIndex, IDictionary<WaveFormatEncoding, int[]> samplerate = null)
         {
-            syncContext = SynchronizationContext.Current; 
+            syncContext = SynchronizationContext.Current ?? new SynchronizationContext();
             String[] names = GetDriverNames();
             if (names.Length == 0)
             {
@@ -543,14 +543,7 @@ namespace NAudio.Wave
 				if (read == 0 && !isSendStop && playbackState == PlaybackState.Playing)
 				{
 					isSendStop = true;
-					if (syncContext != null)
-						syncContext.Post(s => Stop(), null);
-					else
-					{
-						var thread = new Thread(() => { try { Stop(); } catch { }; });
-						thread.SetApartmentState(ApartmentState.STA);
-						thread.Start();
-					}
+					syncContext.Post(s => Stop(), null);
 				}
 			}
         }
