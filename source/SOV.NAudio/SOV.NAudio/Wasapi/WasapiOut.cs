@@ -287,7 +287,7 @@ namespace NAudio.Wave
 
 			int[] sr_values = null;
 			int samplerate = source.SampleRate;
-			var formatEncoding = WaveFormatEncoding.Pcm;
+			var formatEncoding = WaveFormatEncoding.PCM;
 
 			if (dop)
 			{
@@ -324,8 +324,8 @@ namespace NAudio.Wave
 				if (!bitDepthsToTry.Contains(24)) bitDepthsToTry.Add(24);
 				if (!bitDepthsToTry.Contains(16)) bitDepthsToTry.Add(16);
 
-				if (sampleRate != null && sampleRate.ContainsKey(WaveFormatEncoding.Pcm))
-					sr_values = sampleRate[WaveFormatEncoding.Pcm];
+				if (sampleRate != null && sampleRate.ContainsKey(WaveFormatEncoding.PCM))
+					sr_values = sampleRate[WaveFormatEncoding.PCM];
 			}
 
 			foreach (var sampleRate in sampleRatesToTry)
@@ -445,8 +445,8 @@ namespace NAudio.Wave
 				else
 				{
 					bool skip_sr = false;
-					if (sampleRate != null && sampleRate.ContainsKey(WaveFormatEncoding.Pcm))
-						if (sampleRate[WaveFormatEncoding.Pcm] != null && !sampleRate[WaveFormatEncoding.Pcm].Contains(waveProvider.WaveFormat.SampleRate))
+					if (sampleRate != null && sampleRate.ContainsKey(WaveFormatEncoding.PCM))
+						if (sampleRate[WaveFormatEncoding.PCM] != null && !sampleRate[WaveFormatEncoding.PCM].Contains(waveProvider.WaveFormat.SampleRate))
 							skip_sr = true;
 					var format = new WaveFormatExtensible(waveProvider.WaveFormat.SampleRate, waveProvider.WaveFormat.BitsPerSample,
 						waveProvider.WaveFormat.Channels, float32: waveProvider.WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat);

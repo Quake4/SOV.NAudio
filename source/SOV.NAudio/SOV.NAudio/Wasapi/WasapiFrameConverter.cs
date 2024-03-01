@@ -34,11 +34,11 @@ namespace NAudio.Wave
 						throw new NotSupportedException($"Not a supported conversion {output.SetEncoding(WaveFormatEncoding.DoP)} for {input}.");
 				}
 			}
-			else if (output.Encoding == WaveFormatEncoding.Pcm)
+			else if (output.Encoding == WaveFormatEncoding.PCM)
 			{
 				switch (input.Encoding)
 				{
-					case WaveFormatEncoding.Pcm:
+					case WaveFormatEncoding.PCM:
 						switch (input.BitsPerSample)
 						{
 							case 16:

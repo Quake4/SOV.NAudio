@@ -202,7 +202,8 @@ namespace NAudio.Wave.Asio
 					byte* leftSamples = (byte*)asioOutputBuffers[0];
 					byte* rightSamples = (byte*)asioOutputBuffers[1];
 
-					for (int i = 0; i < nbSamples / 8; i++)
+					var samples = nbSamples / 8;
+					while (samples-- > 0)
 					{
 						*leftSamples++ = inputSamples[0];
 						*rightSamples++ = inputSamples[1];

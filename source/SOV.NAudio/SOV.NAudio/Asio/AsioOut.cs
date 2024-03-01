@@ -275,15 +275,15 @@ namespace NAudio.Wave
 				{
 					var format = new AsioIoFormat { FormatType = AsioIoFormatType.PCMFormat };
 					driver.Driver.Future((int)AsioFeature.kAsioGetIoFormat, ref format);
-					return format.FormatType == AsioIoFormatType.DSDFormat ? WaveFormatEncoding.DSD : WaveFormatEncoding.Pcm;
+					return format.FormatType == AsioIoFormatType.DSDFormat ? WaveFormatEncoding.DSD : WaveFormatEncoding.PCM;
 				}
 				catch { }
-				return WaveFormatEncoding.Pcm;
+				return WaveFormatEncoding.PCM;
 			}
 
 			WaveFormatEncoding neededAsioMode()
 			{
-				return waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD ? WaveFormatEncoding.DSD : WaveFormatEncoding.Pcm;
+				return waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD ? WaveFormatEncoding.DSD : WaveFormatEncoding.PCM;
 			}
 
 			void switchAsioMode(AsioIoFormatType type)
@@ -368,7 +368,7 @@ namespace NAudio.Wave
 						switchAsioMode(waveProvider.WaveFormat.BitsPerSample == 1 ? AsioIoFormatType.DSDFormat : AsioIoFormatType.PCMFormat);
 
 					if (!CheckAndSetSampleRate(desiredSampleRate, false,
-						waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD ? WaveFormatEncoding.Pcm : WaveFormatEncoding.DSD,
+						waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD ? WaveFormatEncoding.PCM : WaveFormatEncoding.DSD,
 						waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD))
 					{
 						if (waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD)
@@ -378,7 +378,7 @@ namespace NAudio.Wave
 							// try resampler for pcm
 							if (desiredSampleRate % 44100 == 0 || desiredSampleRate % 48000 == 0)
 								while (!dmoResamplerUsed && (desiredSampleRate >>= 1) >= 44100)
-									if (CheckAndSetSampleRate(desiredSampleRate, false, WaveFormatEncoding.Pcm))
+									if (CheckAndSetSampleRate(desiredSampleRate, false, WaveFormatEncoding.PCM))
 									{
 										try
 										{
@@ -452,7 +452,7 @@ namespace NAudio.Wave
                 NumberOfOutputChannels = 0;
 
 			CheckAndSetSampleRate(desiredSampleRate, true,
-				waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD ? WaveFormatEncoding.Pcm : WaveFormatEncoding.DSD,
+				waveProvider.WaveFormat.Encoding != WaveFormatEncoding.DSD ? WaveFormatEncoding.PCM : WaveFormatEncoding.DSD,
 				OutputWaveFormat.Encoding != WaveFormatEncoding.DSD);
 
             if (!isInitialized)
