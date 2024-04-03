@@ -395,7 +395,7 @@ namespace NAudio.Wave.Asio
 					byte byteValue;
 					for (int i = 0; i < nbSamples; i++)
 					{
-						value = roundedShift8(*inputSamples++);
+						value = *inputSamples++ >> 8;
 
 						byteValue = (byte)(value);
 						*samples[0]++ = byteValue;
@@ -414,13 +414,13 @@ namespace NAudio.Wave.Asio
 				else if (nbChannels == 2 && channels == 2)
 					for (int i = 0; i < nbSamples; i++)
 					{
-						value = roundedShift8(*inputSamples++);
+						value = *inputSamples++ >> 8;
 
 						*samples[0]++ = (byte)(value);
 						*samples[0]++ = (byte)(value >> 8);
 						*samples[0]++ = (byte)(value >> 16);
 
-						value = roundedShift8(*inputSamples++);
+						value = *inputSamples++ >> 8;
 
 						*samples[1]++ = (byte)(value);
 						*samples[1]++ = (byte)(value >> 8);
@@ -433,7 +433,7 @@ namespace NAudio.Wave.Asio
 						{
 							if (j < Math.Min(nbChannels, channels))
 							{
-								value = roundedShift8(*inputSamples++);
+								value = *inputSamples++ >> 8;
 
 								*samples[j]++ = (byte)(value);
 								*samples[j]++ = (byte)(value >> 8);
@@ -606,8 +606,8 @@ namespace NAudio.Wave.Asio
 
                 for (int i = 0; i < nbSamples; i++)
                 {
-                    *leftSamples++ = roundedShift16(*inputSamples++);
-                    *rightSamples++ = roundedShift16(*inputSamples++);
+                    *leftSamples++ = (short)(*inputSamples++ >> 16);
+                    *rightSamples++ = (short)(*inputSamples++ >> 16);
                 }
             }
         }
@@ -630,7 +630,7 @@ namespace NAudio.Wave.Asio
                 {
                     for (int j = 0; j < nbChannels; j++)
                     {
-                        *samples[j]++ = roundedShift16(*inputSamples++);
+                        *samples[j]++ = *inputSamples++ >> 16;
                     }
                 }
             }
@@ -826,25 +826,5 @@ namespace NAudio.Wave.Asio
             sampleValue = (sampleValue < -1.0) ? -1.0 : (sampleValue > 1.0) ? 1.0 : sampleValue;
             return (short)(sampleValue * 32767.0);
         }
-
-		const int shift8Max = 1 << (8 - 1);
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int roundedShift8(int sampleValue)
-		{
-			if (sampleValue >= int.MaxValue - shift8Max)
-				return sampleValue >> 8;
-			else
-				return (sampleValue + shift8Max) >> 8;
-		}
-
-		const int shift16Max = 1 << (16 - 1);
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static short roundedShift16(int sampleValue)
-		{
-			if (sampleValue >= int.MaxValue - shift16Max)
-				return (short)(sampleValue >> 16);
-			else
-				return (short)((sampleValue + shift16Max) >> 16);
-		}
 	}
 }
