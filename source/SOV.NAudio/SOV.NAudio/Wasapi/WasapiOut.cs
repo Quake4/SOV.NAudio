@@ -40,10 +40,20 @@ namespace NAudio.Wave
 		/// </summary>
 		public event EventHandler<StoppedEventArgs> PlaybackStopped;
 
-        /// <summary>
-        /// WASAPI Out shared mode, default
-        /// </summary>
-        public WasapiOut() :
+		/// <summary>
+		/// Run action on Create playing thread
+		/// </summary>
+		public Action PlayThreadCreated;
+
+		/// <summary>
+		/// Run action on Delete playing thread
+		/// </summary>
+		public Action PlayThreadDeleted;
+
+		/// <summary>
+		/// WASAPI Out shared mode, default
+		/// </summary>
+		public WasapiOut() :
             this(GetDefaultAudioEndpoint(), AudioClientShareMode.Shared, true, 200)
         {
 
@@ -105,7 +115,10 @@ namespace NAudio.Wave
 
         private void PlayThread()
         {
-            ResamplerDmoStream resamplerDmoStream = null;
+			if (PlayThreadCreated != null)
+				PlayThreadCreated();
+
+			ResamplerDmoStream resamplerDmoStream = null;
             IWaveProvider playbackProvider = sourceProvider;
             Exception exception = null;
             try
@@ -193,8 +206,11 @@ namespace NAudio.Wave
                     resamplerDmoStream.Dispose();
                 }
                 RaisePlaybackStopped(exception);
-            }
-        }
+
+				if (PlayThreadDeleted != null)
+					PlayThreadDeleted();
+			}
+		}
 
         private void RaisePlaybackStopped(Exception e)
         {
