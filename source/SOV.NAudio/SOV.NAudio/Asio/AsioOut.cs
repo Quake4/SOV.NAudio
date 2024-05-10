@@ -104,7 +104,7 @@ namespace NAudio.Wave
         /// <summary>
         /// Dispose
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             if (driver != null)
             {
