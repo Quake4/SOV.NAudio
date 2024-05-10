@@ -23,7 +23,8 @@ namespace SOV.NAudio
 		public AsioOut(string driverName, IDictionary<WaveFormatEncoding, int[]> samplerate)
 			: base(driverName, samplerate)
 		{
-			MMCSS.Set();
+			if (MMCSS.Set())
+				MMCSS.Priority(MMCSS.ePriority.Critical);
 		}
 
 		public override void Dispose()
