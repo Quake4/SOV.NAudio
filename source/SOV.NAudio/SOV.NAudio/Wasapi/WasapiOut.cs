@@ -10,10 +10,10 @@ using System.Threading;
 // ReSharper disable once CheckNamespace
 namespace NAudio.Wave
 {
-	/// <summary>
-	/// Support for playback using Wasapi
-	/// </summary>
-	public class WasapiOut : IWavePlayer//, IWavePosition
+    /// <summary>
+    /// Support for playback using Wasapi
+    /// </summary>
+    public class WasapiOut : IWavePlayer//, IWavePosition
     {
         protected AudioClient audioClient;
         private readonly MMDevice mmDevice;
@@ -50,10 +50,10 @@ namespace NAudio.Wave
 		/// </summary>
 		public Action PlayThreadDeleted;
 
-		/// <summary>
-		/// WASAPI Out shared mode, default
-		/// </summary>
-		public WasapiOut() :
+        /// <summary>
+        /// WASAPI Out shared mode, default
+        /// </summary>
+        public WasapiOut() :
             this(GetDefaultAudioEndpoint(), AudioClientShareMode.Shared, true, 200)
         {
 
@@ -118,7 +118,7 @@ namespace NAudio.Wave
 			if (PlayThreadCreated != null)
 				PlayThreadCreated();
 
-			ResamplerDmoStream resamplerDmoStream = null;
+            ResamplerDmoStream resamplerDmoStream = null;
             IWaveProvider playbackProvider = sourceProvider;
             Exception exception = null;
             try
@@ -132,7 +132,7 @@ namespace NAudio.Wave
                 bufferFrameCount = audioClient.BufferSize;
                 bytesPerFrame = OutputWaveFormat.Channels * OutputWaveFormat.BitsPerSample / 8;
                 readBuffer = BufferHelpers.Ensure(readBuffer, bufferFrameCount * Math.Max(OutputWaveFormat.BlockAlign,
-					(sourceWaveFormat.Encoding == WaveFormatEncoding.DSD ? 2 : 1) * sourceWaveFormat.BlockAlign));
+                    (sourceWaveFormat.Encoding == WaveFormatEncoding.DSD ? 2 : 1) * sourceWaveFormat.BlockAlign));
                 if (FillBuffer(playbackProvider, bufferFrameCount))
                 {
                     // played a zero length stream - exit immediately
@@ -207,10 +207,10 @@ namespace NAudio.Wave
                 }
                 RaisePlaybackStopped(exception);
 
-				if (PlayThreadDeleted != null)
-					PlayThreadDeleted();
-			}
-		}
+                if (PlayThreadDeleted != null)
+                    PlayThreadDeleted();
+            }
+        }
 
         private void RaisePlaybackStopped(Exception e)
         {
