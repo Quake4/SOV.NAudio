@@ -266,7 +266,7 @@ namespace NAudio.Wave
 
 			string DesiredNotSupported(string format, int samplerate)
 			{
-				return $"Desired {format} sample rate '{samplerate}' dosn't supported or disabled.";
+				return $"Desired {format} sample rate '{samplerate}' dsn't supported or disabled.";
 			}
 
 			WaveFormatEncoding currentAsioMode() 
