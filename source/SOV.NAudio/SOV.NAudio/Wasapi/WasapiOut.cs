@@ -366,7 +366,7 @@ namespace NAudio.Wave
 				}
             }
 
-            throw new NotSupportedException($"Desired {formatEncoding} sample rate '{samplerate}' dsn't supported or disabled.");
+            throw new NotSupportedException($"Desired {formatEncoding} sample rate '{samplerate}' doesn't supported or disabled.");
         }
 
 		public WaveFormatExtensible InternalWaveFormat
