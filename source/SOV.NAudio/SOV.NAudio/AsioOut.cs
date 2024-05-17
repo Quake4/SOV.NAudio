@@ -26,11 +26,12 @@ namespace SOV.NAudio
 			if (MMCSS.Set())
 				MMCSS.Priority(MMCSS.ePriority.Critical);
 		}
-
+		/*
 		public override void Dispose()
 		{
 			MMCSS.Unset();
 			base.Dispose();
 		}
+		*/
 	}
 }
