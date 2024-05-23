@@ -21,8 +21,8 @@ namespace SOV.NAudio
 		[DllImport("avrt.dll")]
 		static extern IntPtr AvSetMmThreadCharacteristics(string taskName, out int taskIndex);
 
-		[DllImport("avrt.dll")]
-		static extern bool AvRevertMmThreadCharacteristics(int taskIndex);
+		//[DllImport("avrt.dll")]
+		//static extern bool AvRevertMmThreadCharacteristics(int taskIndex);
 
 		[DllImport("avrt.dll")]
 		static extern bool AvSetMmThreadPriority(IntPtr handle, ePriority priority);
@@ -36,12 +36,12 @@ namespace SOV.NAudio
 		}
 
 		static IntPtr _ptr;
-		static int _taskIndex = -1;
+		//static int _taskIndex = -1;
 
 		public static bool Set()
 		{
-			if (_taskIndex != -1)
-				throw new Exception("Call Unset before.");
+			//if (_taskIndex != -1)
+			//	throw new Exception("Call Unset before.");
 			try
 			{
 				_ptr = AvSetMmThreadCharacteristics("Pro Audio", out _taskIndex);
@@ -53,8 +53,8 @@ namespace SOV.NAudio
 
 		public static bool Priority(ePriority priority)
 		{
-			if (_taskIndex == -1)
-				throw new Exception("Call Set before.");
+			//if (_taskIndex == -1)
+			//	throw new Exception("Call Set before.");
 			try
 			{
 				return AvSetMmThreadPriority(_ptr, priority);
@@ -62,7 +62,7 @@ namespace SOV.NAudio
 			catch { }
 			return false;
 		}
-
+		/*
 		public static bool Unset()
 		{
 			try
@@ -78,5 +78,6 @@ namespace SOV.NAudio
 			catch { };
 			return false;
 		}
+		*/
 	}
 }
