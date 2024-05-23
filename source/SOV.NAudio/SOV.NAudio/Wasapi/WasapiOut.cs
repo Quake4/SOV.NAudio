@@ -48,7 +48,7 @@ namespace NAudio.Wave
 		/// <summary>
 		/// Run action on Delete playing thread
 		/// </summary>
-		public Action PlayThreadDeleted;
+		//public Action PlayThreadDeleted;
 
         /// <summary>
         /// WASAPI Out shared mode, default
@@ -207,8 +207,8 @@ namespace NAudio.Wave
                 }
                 RaisePlaybackStopped(exception);
 
-                if (PlayThreadDeleted != null)
-                    PlayThreadDeleted();
+                //if (PlayThreadDeleted != null)
+                //    PlayThreadDeleted();
             }
         }
 

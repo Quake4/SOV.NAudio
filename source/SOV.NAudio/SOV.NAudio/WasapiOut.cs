@@ -39,7 +39,7 @@ namespace SOV.NAudio
 		{
 			//SetMMCSSPiority();
 			PlayThreadCreated = SetMMCSSPiority;
-			PlayThreadDeleted = () => MMCSS.Unset();
+			//PlayThreadDeleted = () => MMCSS.Unset();
 		}
 
 		void SetMMCSSPiority()
