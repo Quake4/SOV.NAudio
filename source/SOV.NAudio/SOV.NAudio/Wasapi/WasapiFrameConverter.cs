@@ -47,8 +47,7 @@ namespace NAudio.Wave
 									case 16:
 										return Converter16To16Generic;
 									case 24:
-										//convertor = Converter16To24Generic;
-										break;
+										return Converter16To24Generic;
 									case 32:
 										return Converter16To32Generic;
 									default:
@@ -60,6 +59,8 @@ namespace NAudio.Wave
 								{
 									case 16:
 										return Converter24To16Generic;
+									case 24:
+										return Converter24To24Generic;
 									case 32:
 										return Converter24To32Generic;
 									default:
@@ -72,8 +73,7 @@ namespace NAudio.Wave
 									case 16:
 										return Converter32To16Generic;
 									case 24:
-										//convertor = Converter32To24Generic;
-										break;
+										return Converter32To24Generic;
 									case 32:
 										return Converter32To32Generic;
 									default:
@@ -348,6 +348,64 @@ namespace NAudio.Wave
 
 		internal static void Converter16To24Generic(IntPtr inputInterleavedBuffer, int inputChannels, IntPtr outputInterleavedBuffer, int outputChannels, int frames)
 		{
+			unsafe
+			{
+				byte* input = (byte*)inputInterleavedBuffer;
+				byte* output = (byte*)outputInterleavedBuffer;
+
+				// optimized mono to stereo
+				if (inputChannels == 1 && outputChannels >= 2)
+					for (int i = 0; i < frames; i++)
+					{
+						output[0] = 0;
+						output[3] = 0;
+
+						var value = *input++;
+						output[1] = value;
+						output[4] = value;
+
+						value = *input++;
+						output[2] = value;
+						output[5] = value;
+
+						output += 3 * outputChannels;
+					}
+				// optimized stereo to stereo
+				else if (inputChannels == 2 && outputChannels == 2)
+					for (int i = 0; i < frames; i++)
+					{
+						*output++ = 0;
+						*output++ = *input++;
+						*output++ = *input++;
+
+						*output++ = 0;
+						*output++ = *input++;
+						*output++ = *input++;
+					}
+				// generic
+				else
+				{
+					var max = Math.Max(inputChannels, outputChannels);
+					var min = Math.Min(inputChannels, outputChannels);
+					for (int i = 0; i < frames; i++)
+						for (int j = 0; j < max; j++)
+						{
+							if (j < min)
+							{
+								*output++ = 0;
+								*output++ = *input++;
+								*output++ = *input++;
+							}
+							else if (j >= outputChannels)
+								input += 2;
+							if (j >= inputChannels)
+							{
+								*(int*)output = 0;
+								output += 3;
+							}
+						}
+				}
+			}
 		}
 
 		internal static void Converter16To32Generic(IntPtr inputInterleavedBuffer, int inputChannels, IntPtr outputInterleavedBuffer, int outputChannels, int frames)
@@ -439,6 +497,69 @@ namespace NAudio.Wave
 								input += 3;
 							if (j >= inputChannels)
 								*output++ = 0;
+						}
+				}
+			}
+		}
+
+		internal static void Converter24To24Generic(IntPtr inputInterleavedBuffer, int inputChannels, IntPtr outputInterleavedBuffer, int outputChannels, int frames)
+		{
+			unsafe
+			{
+				byte* input = (byte*)inputInterleavedBuffer;
+				byte* output = (byte*)outputInterleavedBuffer;
+
+				// optimized mono to stereo
+				if (inputChannels == 1 && outputChannels >= 2)
+					for (int i = 0; i < frames; i++)
+					{
+						var value = *input++;
+						output[0] = value;
+						output[3] = value;
+
+						value = *input++;
+						output[1] = value;
+						output[4] = value;
+
+						value = *input++;
+						output[2] = value;
+						output[5] = value;
+
+						output += 3 * outputChannels;
+					}
+				// optimized stereo to stereo
+				else if (inputChannels == 2 && outputChannels == 2)
+					for (int i = 0; i < frames; i++)
+					{
+						*output++ = *input++;
+						*output++ = *input++;
+						*output++ = *input++;
+
+						*output++ = *input++;
+						*output++ = *input++;
+						*output++ = *input++;
+					}
+				// generic
+				else
+				{
+					var max = Math.Max(inputChannels, outputChannels);
+					var min = Math.Min(inputChannels, outputChannels);
+					for (int i = 0; i < frames; i++)
+						for (int j = 0; j < max; j++)
+						{
+							if (j < min)
+							{
+								*output++ = *input++;
+								*output++ = *input++;
+								*output++ = *input++;
+							}
+							else if (j >= outputChannels)
+								input += 3;
+							if (j >= inputChannels)
+							{
+								*(int*)output = 0;
+								output += 3;
+							}
 						}
 				}
 			}
@@ -557,6 +678,70 @@ namespace NAudio.Wave
 
 		internal static void Converter32To24Generic(IntPtr inputInterleavedBuffer, int inputChannels, IntPtr outputInterleavedBuffer, int outputChannels, int frames)
 		{
+			unsafe
+			{
+				byte* input = (byte*)inputInterleavedBuffer;
+				byte* output = (byte*)outputInterleavedBuffer;
+
+				// optimized mono to stereo
+				if (inputChannels == 1 && outputChannels >= 2)
+					for (int i = 0; i < frames; i++)
+					{
+						input++;
+						var value = *input++;
+						output[0] = value;
+						output[3] = value;
+
+						value = *input++;
+						output[1] = value;
+						output[4] = value;
+
+						value = *input++;
+						output[2] = value;
+						output[5] = value;
+
+						output += 3 * outputChannels;
+					}
+				// optimized stereo to stereo
+				else if (inputChannels == 2 && outputChannels == 2)
+					for (int i = 0; i < frames; i++)
+					{
+						input++;
+						*output++ = *input++;
+						*output++ = *input++;
+						*output++ = *input++;
+
+						input++;
+						*output++ = *input++;
+						*output++ = *input++;
+						*output++ = *input++;
+					}
+				// generic
+				else
+				{
+					var max = Math.Max(inputChannels, outputChannels);
+					var min = Math.Min(inputChannels, outputChannels);
+					for (int i = 0; i < frames; i++)
+						for (int j = 0; j < max; j++)
+						{
+							if (j < min)
+							{
+								input++;
+								*output++ = *input++;
+								*output++ = *input++;
+								*output++ = *input++;
+							}
+							else if (j >= outputChannels)
+								input += 4;
+							if (j >= inputChannels)
+							{
+								*output++ = 0;
+								*output++ = 0;
+								*output++ = 0;
+							}
+						}
+				}
+			}
 		}
 
 		internal static void Converter32To32Generic(IntPtr inputInterleavedBuffer, int inputChannels, IntPtr outputInterleavedBuffer, int outputChannels, int frames)
