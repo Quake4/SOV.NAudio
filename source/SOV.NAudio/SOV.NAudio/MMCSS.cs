@@ -36,7 +36,7 @@ namespace SOV.NAudio
 		}
 
 		static IntPtr _ptr;
-		//static int _taskIndex = -1;
+		static int _taskIndex = -1;
 
 		public static bool Set()
 		{
