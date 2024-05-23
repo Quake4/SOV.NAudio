@@ -37,7 +37,7 @@ namespace SOV.NAudio
 		public WasapiOut(MMDevice device, AudioClientShareMode shareMode, IDictionary<WaveFormatEncoding, int[]> samplerate, bool useEventSync = true, int latency = 100)
 			: base(device, shareMode, useEventSync, latency, samplerate)
 		{
-			SetMMCSSPiority();
+			//SetMMCSSPiority();
 			PlayThreadCreated = SetMMCSSPiority;
 			//PlayThreadDeleted = () => MMCSS.Unset();
 		}
