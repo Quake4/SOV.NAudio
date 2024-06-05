@@ -269,21 +269,21 @@ namespace NAudio.Wave
 				return $"Desired {format} sample rate '{samplerate}' doesn't supported or disabled.";
 			}
 
-			WaveFormatEncoding currentAsioMode() 
+			AsioIoFormatType currentAsioMode() 
 			{
 				try
 				{
 					var format = new AsioIoFormat { FormatType = AsioIoFormatType.PCMFormat };
 					driver.Driver.Future((int)AsioFeature.kAsioGetIoFormat, ref format);
-					return format.FormatType == AsioIoFormatType.DSDFormat ? WaveFormatEncoding.DSD : WaveFormatEncoding.PCM;
+					return format.FormatType;
 				}
 				catch { }
-				return WaveFormatEncoding.PCM;
+				return AsioIoFormatType.Invalid;
 			}
 
-			WaveFormatEncoding neededAsioMode()
+			AsioIoFormatType neededAsioMode()
 			{
-				return waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD ? WaveFormatEncoding.DSD : WaveFormatEncoding.PCM;
+				return waveProvider.WaveFormat.Encoding == WaveFormatEncoding.DSD ? AsioIoFormatType.DSDFormat : AsioIoFormatType.PCMFormat;
 			}
 
 			void switchAsioMode(AsioIoFormatType type)
@@ -398,7 +398,7 @@ namespace NAudio.Wave
 				}
 				catch (Exception ex)
 				{
-					if (neededAsioMode() == WaveFormatEncoding.DSD)
+					if (neededAsioMode() == AsioIoFormatType.DSDFormat)
 					{
 						desiredSampleRate = waveProvider.WaveFormat.SampleRate / 16;
 						if (!CheckAndSetSampleRate(desiredSampleRate, false, WaveFormatEncoding.DoP))
