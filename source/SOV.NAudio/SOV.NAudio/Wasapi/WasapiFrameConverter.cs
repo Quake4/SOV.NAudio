@@ -91,8 +91,7 @@ namespace NAudio.Wave
 							case 16:
 								return ConverterFloatTo16Generic;
 							case 24:
-								//convertor = ConverterFloatTo24Generic;
-								break;
+								return ConverterFloatTo24Generic;
 							case 32:
 								return ConverterFloatTo32Generic;
 							default:
@@ -834,6 +833,67 @@ namespace NAudio.Wave
 
 		internal static void ConverterFloatTo24Generic(IntPtr inputInterleavedBuffer, int inputChannels, IntPtr outputInterleavedBuffer, int outputChannels, int frames)
 		{
+			unsafe
+			{
+				float* input = (float*)inputInterleavedBuffer;
+				byte* output = (byte*)outputInterleavedBuffer;
+
+				// optimized mono to stereo
+				if (inputChannels == 1 && outputChannels >= 2)
+					for (int i = 0; i < frames; i++)
+					{
+						var value = AsioSampleConvertor.clampTo24Bit(*input++);
+
+						output[0] = (byte)(value >> 0);
+						output[3] = (byte)(value >> 0);
+
+						output[1] = (byte)(value >> 8);
+						output[4] = (byte)(value >> 8);
+
+						output[2] = (byte)(value >> 16);
+						output[5] = (byte)(value >> 16);
+
+						output += 3 * outputChannels;
+					}
+				// optimized stereo to stereo
+				else if (inputChannels == 2 && outputChannels == 2)
+					for (int i = 0; i < frames; i++)
+					{
+						var value = AsioSampleConvertor.clampTo24Bit(*input++);
+						*output++ = (byte)(value >> 0);
+						*output++ = (byte)(value >> 8);
+						*output++ = (byte)(value >> 16);
+
+						value = AsioSampleConvertor.clampTo24Bit(*input++);
+						*output++ = (byte)(value >> 0);
+						*output++ = (byte)(value >> 8);
+						*output++ = (byte)(value >> 16);
+					}
+				// generic
+				else
+				{
+					var max = Math.Max(inputChannels, outputChannels);
+					var min = Math.Min(inputChannels, outputChannels);
+					for (int i = 0; i < frames; i++)
+						for (int j = 0; j < max; j++)
+						{
+							if (j < min)
+							{
+								var value = AsioSampleConvertor.clampTo24Bit(*input++);
+								*output++ = (byte)(value >> 0);
+								*output++ = (byte)(value >> 8);
+								*output++ = (byte)(value >> 16);
+							}
+							else if (j >= outputChannels)
+								input++;
+							if (j >= inputChannels)
+							{
+								*(int*)output = 0;
+								output += 3;
+							}
+						}
+				}
+			}
 		}
 
 		internal static void ConverterFloatTo32Generic(IntPtr inputInterleavedBuffer, int inputChannels, IntPtr outputInterleavedBuffer, int outputChannels, int frames)
