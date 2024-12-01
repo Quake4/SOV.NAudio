@@ -35,6 +35,7 @@
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacFrameInformation.cs" Link="Flac\FlacFrameInformation.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacLayer.cs" Link="Flac\FlacLayer.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacMetadata.cs" Link="Flac\FlacMetadata.cs" />
+    <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacMetadataPicture.cs" Link="Flac\FlacMetadataPicture.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacMetadataSeekTable.cs" Link="Flac\FlacMetadataSeekTable.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacMetadataStreamInfo.cs" Link="Flac\FlacMetadataStreamInfo.cs" />
     <Compile Include="..\..\..\module\naudio-flac\src\NAudio.Flac\FlacMetaDataType.cs" Link="Flac\FlacMetaDataType.cs" />
