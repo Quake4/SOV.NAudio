@@ -30,7 +30,7 @@ namespace NAudio.Wave
         private volatile PlaybackState playbackState;
         private Thread playThread;
         private readonly SynchronizationContext syncContext;
-        protected bool dmoResamplerNeeded;
+        protected bool resamplerNeeded;
 		WaveFormatExtensible internalWaveFormat;
 		WasapiFrameConverter.FrameConverter frameConverter;
 		protected readonly IDictionary<WaveFormatEncoding, int[]> sampleRate;
@@ -118,14 +118,14 @@ namespace NAudio.Wave
 			if (PlayThreadCreated != null)
 				PlayThreadCreated();
 
-            ResamplerDmoStream resamplerDmoStream = null;
+			MediaFoundationResampler resamplerDmoStream = null;
             IWaveProvider playbackProvider = sourceProvider;
             Exception exception = null;
             try
             {
-                if (dmoResamplerNeeded)
+                if (resamplerNeeded)
                 {
-                    resamplerDmoStream = new ResamplerDmoStream(sourceProvider, OutputWaveFormat, ResamplerDmoStream.MaxQuality);
+                    resamplerDmoStream = new MediaFoundationResampler(sourceProvider, OutputWaveFormat);
                     playbackProvider = resamplerDmoStream;
                 }
                 // fill a whole buffer
@@ -396,12 +396,12 @@ namespace NAudio.Wave
                         Priority = ThreadPriority.Highest
                     };
                     playbackState = PlaybackState.Playing;
-                    playThread.Start();                    
+                    playThread.Start();
                 }
                 else
                 {
                     playbackState = PlaybackState.Playing;
-                }                
+                }
             }
         }
 
@@ -426,7 +426,7 @@ namespace NAudio.Wave
             if (playbackState == PlaybackState.Playing)
             {
                 playbackState = PlaybackState.Paused;
-            }            
+            }
         }
 
         /// <summary>
@@ -456,7 +456,7 @@ namespace NAudio.Wave
 				{
 					InternalWaveFormat = GetFallbackFormat(waveProvider.WaveFormat, true);
 					frameConverter = WasapiFrameConverter.SelectFrameConverter(waveProvider.WaveFormat, OutputWaveFormat);
-					dmoResamplerNeeded = false;
+					resamplerNeeded = false;
 				}
 				else
 				{
@@ -470,7 +470,7 @@ namespace NAudio.Wave
 						!audioClient.IsFormatSupported(shareMode, format/*, out WaveFormatExtensible closestSampleRateFormat*/))
 					{
 						// Use closesSampleRateFormat (in sharedMode, it equals usualy to the audioClient.MixFormat)
-						// See documentation : http://msdn.microsoft.com/en-us/library/ms678737(VS.85).aspx 
+						// See documentation : http://msdn.microsoft.com/en-us/library/ms678737(VS.85).aspx
 						// They say : "In shared mode, the audio engine always supports the mix format"
 						// The MixFormat is more likely to be a WaveFormatExtensible.
 						//if (closestSampleRateFormat == null)
@@ -481,7 +481,7 @@ namespace NAudio.Wave
 						//{
 						//    OutputWaveFormat = closestSampleRateFormat.ToStandardWaveFormat();
 						//}
-						dmoResamplerNeeded = false;
+						resamplerNeeded = false;
 						var outWF = OutputWaveFormat;
 						frameConverter = WasapiFrameConverter.SelectFrameConverter(waveProvider.WaveFormat, outWF);
 						if (frameConverter == null && outWF.ToString() != waveProvider.WaveFormat.ToString())
@@ -489,7 +489,7 @@ namespace NAudio.Wave
 							try
 							{
 								// just check that we can make it.
-								using (new ResamplerDmoStream(waveProvider, outWF, ResamplerDmoStream.MaxQuality))
+								using (new MediaFoundationResampler(waveProvider, outWF))
 								{
 								}
 							}
@@ -498,18 +498,18 @@ namespace NAudio.Wave
 								// On Windows 10 some poorly coded drivers return a bad format in to closestSampleRateFormat
 								// In that case, try and fallback as if it provided no closest (e.g. force trying the mix format)
 								InternalWaveFormat = GetFallbackFormat(waveProvider.WaveFormat);
-								using (new ResamplerDmoStream(waveProvider, outWF, ResamplerDmoStream.MaxQuality))
+								using (new MediaFoundationResampler(waveProvider, outWF))
 								{
 								}
 							}
-							dmoResamplerNeeded = true;
+							resamplerNeeded = true;
 						}
 					}
 					else
 					{
 						InternalWaveFormat = format;
 						frameConverter = null;
-						dmoResamplerNeeded = false;
+						resamplerNeeded = false;
 					}
 				}
 			}
@@ -527,7 +527,7 @@ namespace NAudio.Wave
 				if (shareMode == AudioClientShareMode.Shared)
 				{
 					// With EventCallBack and Shared, both latencies must be set to 0 (update - not sure this is true anymore)
-					// 
+					//
 					audioClient.Initialize(shareMode, AudioClientStreamFlags.EventCallback | flags, latencyRefTimes, 0,
 						InternalWaveFormat, Guid.Empty);
 

@@ -17,7 +17,7 @@ namespace SOV.NAudio
 {
 	public class WasapiOut : NAud.Wave.WasapiOut, IWaveFormat
 	{
-		public bool ResamplerUsed => dmoResamplerNeeded;
+		public bool ResamplerUsed => resamplerNeeded;
 
 		public bool SharedMode => shareMode == AudioClientShareMode.Shared;
 

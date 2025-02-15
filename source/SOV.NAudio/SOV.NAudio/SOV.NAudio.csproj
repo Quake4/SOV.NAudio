@@ -126,57 +126,50 @@
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\PropVariant.cs" Link="Wasapi\Core\PropVariant.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\PropVariantNative.cs" Link="Wasapi\Core\PropVariantNative.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\CoreAudioApi\Role.cs" Link="Wasapi\Core\Role.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoEnumFlags.cs" Link="Wasapi\DMO\DmoEnumFlags.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoGuids.cs" Link="Wasapi\DMO\DmoGuids.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoHResults.cs" Link="Wasapi\DMO\DmoHResults.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoInputDataBufferFlags.cs" Link="Wasapi\DMO\DmoInputDataBufferFlags.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoInputStatusFlags.cs" Link="Wasapi\DMO\DmoInputStatusFlags.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoInterop.cs" Link="Wasapi\DMO\DmoInterop.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoMediaType.cs" Link="Wasapi\DMO\DmoMediaType.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoOutputDataBuffer.cs" Link="Wasapi\DMO\DmoOutputDataBuffer.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoOutputDataBufferFlags.cs" Link="Wasapi\DMO\DmoOutputDataBufferFlags.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoPartialMediaType.cs" Link="Wasapi\DMO\DmoPartialMediaType.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoProcessOutputFlags.cs" Link="Wasapi\DMO\DmoProcessOutputFlags.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\DmoSetTypeFlags.cs" Link="Wasapi\DMO\DmoSetTypeFlags.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\IEnumDmo.cs" Link="Wasapi\DMO\IEnumDmo.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\IMediaBuffer.cs" Link="Wasapi\DMO\IMediaBuffer.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\IMediaObject.cs" Link="Wasapi\DMO\IMediaObject.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\InputStreamInfoFlags.cs" Link="Wasapi\DMO\InputStreamInfoFlags.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\IWMResamplerProps.cs" Link="Wasapi\DMO\IWMResamplerProps.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\MediaBuffer.cs" Link="Wasapi\DMO\MediaBuffer.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\MediaObject.cs" Link="Wasapi\DMO\MediaObject.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\MediaObjectSizeInfo.cs" Link="Wasapi\DMO\MediaObjectSizeInfo.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\MediaTypes.cs" Link="Wasapi\DMO\MediaTypes.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\OutputStreamInfoFlags.cs" Link="Wasapi\DMO\OutputStreamInfoFlags.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\Dmo\ResamplerMediaObject.cs" Link="Wasapi\DMO\ResamplerMediaObject.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundationReader.cs" Link="Wasapi\MediaFoundationReader.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundationResampler.cs" Link="Wasapi\MediaFoundationResampler.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\AudioSubtypes.cs" Link="Wasapi\MF\AudioSubtypes.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFActivate.cs" Link="Wasapi\MF\IMFActivate.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFAttributes.cs" Link="Wasapi\MF\IMFAttributes.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFByteStream.cs" Link="Wasapi\MF\IMFByteStream.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFCollection.cs" Link="Wasapi\MF\IMFCollection.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFMediaBuffer.cs" Link="Wasapi\MF\IMFMediaBuffer.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFMediaEvent.cs" Link="Wasapi\MF\IMFMediaEvent.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFMediaType.cs" Link="Wasapi\MF\IMFMediaType.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFSample.cs" Link="Wasapi\MF\IMFSample.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFSinkWriter.cs" Link="Wasapi\MF\IMFSinkWriter.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFSourceReader.cs" Link="Wasapi\MF\IMFSourceReader.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFTransform.cs" Link="Wasapi\MF\IMFTransform.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaEventType.cs" Link="Wasapi\MF\MediaEventType.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaFoundationAttributes.cs" Link="Wasapi\MF\MediaFoundationAttributes.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaFoundationErrors.cs" Link="Wasapi\MF\MediaFoundationErrors.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaFoundationHelpers.cs" Link="Wasapi\MF\MediaFoundationHelpers.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaFoundationInterop.cs" Link="Wasapi\MF\MediaFoundationInterop.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaFoundationTransform.cs" Link="Wasapi\MF\MediaFoundationTransform.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaFoundationTransformCategories.cs" Link="Wasapi\MF\MediaFoundationTransformCategories.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaType.cs" Link="Wasapi\MF\MediaType.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaTypes.cs" Link="Wasapi\MF\MediaTypes.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MFT_INPUT_STREAM_INFO.cs" Link="Wasapi\MF\MFT_INPUT_STREAM_INFO.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MFT_MESSAGE_TYPE.cs" Link="Wasapi\MF\MFT_MESSAGE_TYPE.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MFT_OUTPUT_DATA_BUFFER.cs" Link="Wasapi\MF\MFT_OUTPUT_DATA_BUFFER.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MFT_OUTPUT_STREAM_INFO.cs" Link="Wasapi\MF\MFT_OUTPUT_STREAM_INFO.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MFT_REGISTER_TYPE_INFO.cs" Link="Wasapi\MF\MFT_REGISTER_TYPE_INFO.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MF_SINK_WRITER_STATISTICS.cs" Link="Wasapi\MF\MF_SINK_WRITER_STATISTICS.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\_MFT_ENUM_FLAG.cs" Link="Wasapi\MF\_MFT_ENUM_FLAG.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\ResamplerDmoStream.cs" Link="Wasapi\ResamplerDmoStream.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\_MFT_INPUT_STATUS_FLAGS.cs" Link="Wasapi\MF\_MFT_INPUT_STATUS_FLAGS.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\_MFT_INPUT_STREAM_INFO_FLAGS.cs" Link="Wasapi\MF\_MFT_INPUT_STREAM_INFO_FLAGS.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\_MFT_OUTPUT_DATA_BUFFER_FLAGS.cs" Link="Wasapi\MF\_MFT_OUTPUT_DATA_BUFFER_FLAGS.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\_MFT_OUTPUT_STATUS_FLAGS.cs" Link="Wasapi\MF\_MFT_OUTPUT_STATUS_FLAGS.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\_MFT_OUTPUT_STREAM_INFO_FLAGS.cs" Link="Wasapi\MF\_MFT_OUTPUT_STREAM_INFO_FLAGS.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\_MFT_PROCESS_OUTPUT_FLAGS.cs" Link="Wasapi\MF\_MFT_PROCESS_OUTPUT_FLAGS.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\_MFT_PROCESS_OUTPUT_STATUS.cs" Link="Wasapi\MF\_MFT_PROCESS_OUTPUT_STATUS.cs" />
+    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\_MFT_SET_TYPE_FLAGS.cs" Link="Wasapi\MF\_MFT_SET_TYPE_FLAGS.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Flac\Base\" />
     <Folder Include="Wasapi\Core\Interfaces\" />
     <Folder Include="Wasapi\MF\" />
-    <Folder Include="Wasapi\DMO\" />
     <Folder Include="Wave\Format\" />
   </ItemGroup>
 

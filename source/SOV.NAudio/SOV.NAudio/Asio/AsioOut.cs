@@ -8,14 +8,14 @@ namespace NAudio.Wave
 {
 	/// <summary>
 	/// ASIO Out Player. New implementation using an internal C# binding.
-	/// 
-	/// This implementation is only supporting Short16Bit and Float32Bit formats and is optimized 
+	///
+	/// This implementation is only supporting Short16Bit and Float32Bit formats and is optimized
 	/// for 2 outputs channels .
 	/// SampleRate is supported only if AsioDriver is supporting it
-	///     
+	///
 	/// This implementation is probably the first AsioDriver binding fully implemented in C#!
-	/// 
-	/// Original Contributor: Mark Heath 
+	///
+	/// Original Contributor: Mark Heath
 	/// New Contributor to C# binding : Alexandre Mutel - email: alexandre_mutel at yahoo.fr
 	/// </summary>
 	public class AsioOut : IWavePlayer
@@ -33,9 +33,9 @@ namespace NAudio.Wave
         private bool isInitialized;
 		private volatile bool isSendStop;
 
-		protected bool dmoResamplerUsed;
-		protected WaveFormat dmoResamplerFormat;
-		protected ResamplerDmoStream dmoResampler;
+		protected bool resamplerUsed;
+		protected WaveFormat resamplerFormat;
+		protected MediaFoundationResampler resampler;
 		protected readonly IList<int> blackListedSampleRates = new List<int>();
 		protected IDictionary<WaveFormatEncoding, int[]> sampleRate;
 
@@ -55,7 +55,7 @@ namespace NAudio.Wave
         public event EventHandler DriverResetRequest;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AsioOut"/> class with the first 
+        /// Initializes a new instance of the <see cref="AsioOut"/> class with the first
         /// available ASIO Driver.
         /// </summary>
         public AsioOut()
@@ -251,11 +251,11 @@ namespace NAudio.Wave
         public void InitRecordAndPlayback(IWaveProvider waveProvider, int recordChannels, int recordOnlySampleRate)
         {
 			// dispose resampler
-			if (dmoResamplerUsed)
+			if (resamplerUsed)
 			{
-				if (dmoResampler != null)
-					dmoResampler.Dispose();
-				dmoResampler = null;
+				if (resampler != null)
+					resampler.Dispose();
+				resampler = null;
 			}
 
 			if (waveProvider != null && isInitialized && waveProvider.WaveFormat.ToString() == sourceWaveFormat.ToString())
@@ -269,7 +269,7 @@ namespace NAudio.Wave
 				return $"Desired {format} sample rate '{samplerate}' doesn't supported or disabled.";
 			}
 
-			AsioIoFormatType currentAsioMode() 
+			AsioIoFormatType currentAsioMode()
 			{
 				try
 				{
@@ -354,7 +354,7 @@ namespace NAudio.Wave
 			var outChannels = NumberOfOutputChannels = waveProvider.WaveFormat.Channels;
 			int desiredSampleRate = waveProvider != null ? waveProvider.WaveFormat.SampleRate : recordOnlySampleRate;
 			int bitsPerSample = waveProvider.WaveFormat.BitsPerSample;
-			dmoResamplerUsed = false;
+			resamplerUsed = false;
 
 			if (waveProvider != null)
             {
@@ -377,21 +377,21 @@ namespace NAudio.Wave
 						{
 							// try resampler for pcm
 							if (desiredSampleRate % 44100 == 0 || desiredSampleRate % 48000 == 0)
-								while (!dmoResamplerUsed && (desiredSampleRate >>= 1) >= 44100)
+								while (!resamplerUsed && (desiredSampleRate >>= 1) >= 44100)
 									if (CheckAndSetSampleRate(desiredSampleRate, false, WaveFormatEncoding.PCM))
 									{
 										try
 										{
 											// just check that we can make it.
-											dmoResamplerFormat = new WaveFormat(desiredSampleRate, bitsPerSample, waveProvider.WaveFormat.Channels);
-											dmoResampler = new ResamplerDmoStream(waveProvider, dmoResamplerFormat, ResamplerDmoStream.MaxQuality);
-											dmoResamplerUsed = true;
-											waveProvider = dmoResampler;
+											resamplerFormat = new WaveFormat(desiredSampleRate, bitsPerSample, waveProvider.WaveFormat.Channels);
+											resampler = new MediaFoundationResampler(waveProvider, resamplerFormat);
+											resamplerUsed = true;
+											waveProvider = resampler;
 										}
 										catch { }
 									}
 
-							if (!dmoResamplerUsed)
+							if (!resamplerUsed)
 								throw new ArgumentException(DesiredNotSupported("PCM", waveProvider.WaveFormat.SampleRate));
 						}
 					}
@@ -477,11 +477,11 @@ namespace NAudio.Wave
             isInitialized = true;
 
 			//revert, create in bufferupdate
-			if (dmoResamplerUsed == true)
+			if (resamplerUsed == true)
 			{
-				sourceStream = dmoResampler.inputProvider;
-				dmoResampler.Dispose();
-				dmoResampler = null;
+				sourceStream = resampler.sourceProvider;
+				resampler.Dispose();
+				resampler = null;
 			}
         }
 
@@ -492,10 +492,10 @@ namespace NAudio.Wave
         /// <param name="outputChannels">The output channels.</param>
         void driver_BufferUpdate(IntPtr[] inputChannels, IntPtr[] outputChannels)
         {
-			if (dmoResamplerUsed && dmoResampler == null)
+			if (resamplerUsed && resampler == null)
 			{
-				dmoResampler = new ResamplerDmoStream(sourceStream, dmoResamplerFormat, ResamplerDmoStream.MaxQuality);
-				sourceStream = dmoResampler;
+				resampler = new MediaFoundationResampler(sourceStream, resamplerFormat);
+				sourceStream = resampler;
 			}
 
 			if (this.NumberOfInputChannels > 0)
@@ -610,7 +610,7 @@ namespace NAudio.Wave
         /// <summary>
         /// By default the first channel on the input WaveProvider is sent to the first ASIO output.
         /// This option sends it to the specified channel number.
-        /// Warning: make sure you don't set it higher than the number of available output channels - 
+        /// Warning: make sure you don't set it higher than the number of available output channels -
         /// the number of source channels.
         /// n.b. Future NAudio may modify this
         /// </summary>
