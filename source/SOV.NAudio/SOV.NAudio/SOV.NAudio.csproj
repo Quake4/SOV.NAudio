@@ -137,7 +137,6 @@
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFMediaEvent.cs" Link="Wasapi\MF\IMFMediaEvent.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFMediaType.cs" Link="Wasapi\MF\IMFMediaType.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFSample.cs" Link="Wasapi\MF\IMFSample.cs" />
-    <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFSinkWriter.cs" Link="Wasapi\MF\IMFSinkWriter.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFSourceReader.cs" Link="Wasapi\MF\IMFSourceReader.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\IMFTransform.cs" Link="Wasapi\MF\IMFTransform.cs" />
     <Compile Include="..\..\..\module\naudio\NAudio.Wasapi\MediaFoundation\MediaEventType.cs" Link="Wasapi\MF\MediaEventType.cs" />
