@@ -61,6 +61,9 @@ namespace NAudio.Wave.Asio
                         case 16:
                             convertor = (is2Channels) ? (SampleConvertor)ConvertorShortToShort2Channels : (SampleConvertor)ConvertorShortToShortGeneric;
                             break;
+						case 24:
+							convertor = Convertor24ToShortGeneric;
+							break;
                         case 32:
                             if (waveFormat.Encoding == WaveFormatEncoding.IeeeFloat)
                                 convertor = (is2Channels) ? (SampleConvertor)ConvertorFloatToShort2Channels : (SampleConvertor)ConvertorFloatToShortGeneric;
@@ -708,10 +711,70 @@ namespace NAudio.Wave.Asio
             }
         }
 
-        /// <summary>
-        /// Optimized convertor for 2 channels FLOAT
-        /// </summary>
-        public static void ConvertorFloatToShort2Channels(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
+		public static void Convertor24ToShortGeneric(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
+		{
+			unsafe
+			{
+				int channels = asioOutputBuffers.Length;
+				byte* inputSamples = (byte*)inputInterleavedBuffer;
+				byte*[] samples = new byte*[channels];
+				for (int i = 0; i < channels; i++)
+					samples[i] = (byte*)asioOutputBuffers[i];
+
+				byte value;
+				// optimized mono to stereo
+				if (nbChannels == 1 && channels >= 2)
+					for (int i = 0; i < nbSamples; i++)
+					{
+						inputSamples++;
+
+						value = *inputSamples++;
+						*samples[0]++ = value;
+						*samples[1]++ = value;
+
+						value = *inputSamples++;
+						*samples[0]++ = value;
+						*samples[1]++ = value;
+					}
+				// optimized stereo to stereo
+				else if (nbChannels == 2 && channels == 2)
+					for (int i = 0; i < nbSamples; i++)
+					{
+						inputSamples++;
+						*samples[0]++ = *inputSamples++;
+						*samples[0]++ = *inputSamples++;
+
+						inputSamples++;
+						*samples[1]++ = *inputSamples++;
+						*samples[1]++ = *inputSamples++;
+					}
+				// generic
+				else
+					for (int i = 0; i < nbSamples; i++)
+						for (int j = 0; j < Math.Max(nbChannels, channels); j++)
+						{
+							if (j < Math.Min(nbChannels, channels))
+							{
+								inputSamples++;
+								*samples[j]++ = *inputSamples++;
+								*samples[j]++ = *inputSamples++;
+							}
+							else if (j >= channels)
+								inputSamples += 3;
+							if (j >= nbChannels)
+							{
+								*samples[j]++ = 0;
+								*samples[j]++ = 0;
+							}
+						}
+			}
+		}
+
+
+		/// <summary>
+		/// Optimized convertor for 2 channels FLOAT
+		/// </summary>
+		public static void ConvertorFloatToShort2Channels(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
         {
             unsafe
             {
