@@ -288,13 +288,22 @@ namespace NAudio.Wave
 
 			void switchAsioMode(AsioIoFormatType type)
 			{
-				var format = new AsioIoFormat { FormatType = type };
-				driver.Driver.Future((int)AsioFeature.kAsioSetIoFormat, ref format);
-				driver.BuildCapabilities();
-				if (isInitialized)
+				try
 				{
-					driver.DisposeBuffers();
-					isInitialized = false;
+					var format = new AsioIoFormat { FormatType = type };
+					driver.Driver.Future((int)AsioFeature.kAsioSetIoFormat, ref format);
+					driver.BuildCapabilities();
+					if (isInitialized)
+					{
+						driver.DisposeBuffers();
+						isInitialized = false;
+					}
+				}
+				catch (Exception ex)
+				{
+					if (!driver.Capabilities.HasDSD && type == AsioIoFormatType.PCMFormat)
+						return;
+					throw;
 				}
 			}
 
