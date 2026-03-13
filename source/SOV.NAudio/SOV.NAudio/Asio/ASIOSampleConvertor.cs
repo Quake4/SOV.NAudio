@@ -774,7 +774,7 @@ namespace NAudio.Wave.Asio
 		/// <summary>
 		/// Optimized convertor for 2 channels FLOAT
 		/// </summary>
-		public static void ConvertorFloatToShort2Channels(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
+        public static void ConvertorFloatToShort2Channels(IntPtr inputInterleavedBuffer, IntPtr[] asioOutputBuffers, int nbChannels, int nbSamples)
         {
             unsafe
             {
