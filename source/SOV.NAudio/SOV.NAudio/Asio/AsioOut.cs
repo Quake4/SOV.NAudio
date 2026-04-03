@@ -384,21 +384,41 @@ namespace NAudio.Wave
 							throw new ArgumentException(DesiredNotSupported("DSD", desiredSampleRate));
 						else
 						{
+							var desired = desiredSampleRate;
 							// try resampler for pcm
-							if (desiredSampleRate % 44100 == 0 || desiredSampleRate % 48000 == 0)
-								while (!resamplerUsed && (desiredSampleRate >>= 1) >= 44100)
-									if (CheckAndSetSampleRate(desiredSampleRate, false, WaveFormatEncoding.PCM))
+							if (desired % 44100 == 0 || desired % 48000 == 0)
+							{
+								// aligned samplerate
+								while (!resamplerUsed && (desired >>= 1) >= 44100)
+									if (CheckAndSetSampleRate(desired, false, WaveFormatEncoding.PCM))
 									{
 										try
 										{
 											// just check that we can make it.
-											resamplerFormat = new WaveFormat(desiredSampleRate, bitsPerSample, waveProvider.WaveFormat.Channels);
+											resamplerFormat = new WaveFormat(desired, bitsPerSample, waveProvider.WaveFormat.Channels);
 											resampler = new MediaFoundationResampler(waveProvider, resamplerFormat);
 											resamplerUsed = true;
 											waveProvider = resampler;
+											desiredSampleRate = desired;
 										}
 										catch { }
 									}
+								// check other 48 => 44.1
+								desired = sampleRate[WaveFormatEncoding.PCM][0];
+								if (!resamplerUsed && CheckAndSetSampleRate(desired, false, WaveFormatEncoding.PCM))
+								{
+									try
+									{
+										// just check that we can make it.
+										resamplerFormat = new WaveFormat(desired, bitsPerSample, waveProvider.WaveFormat.Channels);
+										resampler = new MediaFoundationResampler(waveProvider, resamplerFormat);
+										resamplerUsed = true;
+										waveProvider = resampler;
+										desiredSampleRate = desired;
+									}
+									catch { }
+								}
+							}
 
 							if (!resamplerUsed)
 								throw new ArgumentException(DesiredNotSupported("PCM", waveProvider.WaveFormat.SampleRate));
