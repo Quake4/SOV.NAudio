@@ -287,7 +287,7 @@ namespace NAudio.Wave
             return false;
         }
 
-        private WaveFormatExtensible GetFallbackFormat(WaveFormat source, bool dop = false)
+        private WaveFormatExtensible GetFallbackFormat(WaveFormat source, bool dop = false, bool raise = true)
         {
             var deviceChannels = audioClient.MixFormat.Channels; // almost certain to be stereo
 
@@ -344,29 +344,45 @@ namespace NAudio.Wave
 					sr_values = sampleRate[WaveFormatEncoding.PCM];
 			}
 
-			foreach (var sampleRate in sampleRatesToTry)
-            {
-				// check sample rate
-				if (sr_values != null && !sr_values.Contains(sampleRate)) continue;
-                foreach (var channelCount in channelCountsToTry)
-                {
-                    foreach (var bitDepth in bitDepthsToTry)
-                    {
-						var format = new WaveFormatExtensible(sampleRate, bitDepth, channelCount);
-						if (audioClient.IsFormatSupported(shareMode, format))
-							return format;
-						// 24bit as 32bit
-						if (bitDepth == 32 && (source.BitsPerSample == 24 || source.BitsPerSample == 32))
+			for (int i = 1; i <= 2; i++)
+			{
+				foreach (var sampleRate in sampleRatesToTry)
+				{
+					// check sample rate
+					if (sr_values != null && !sr_values.Contains(sampleRate)) continue;
+					foreach (var channelCount in channelCountsToTry)
+					{
+						foreach (var bitDepth in bitDepthsToTry)
 						{
-							format = new WaveFormatExtensible(sampleRate, 24, channelCount, 1);
+							var format = new WaveFormatExtensible(sampleRate, bitDepth, channelCount);
 							if (audioClient.IsFormatSupported(shareMode, format))
 								return format;
+							// 24bit as 32bit
+							if (bitDepth == 32 && (source.BitsPerSample == 24 || source.BitsPerSample == 32))
+							{
+								format = new WaveFormatExtensible(sampleRate, 24, channelCount, 1);
+								if (audioClient.IsFormatSupported(shareMode, format))
+									return format;
+							}
 						}
 					}
 				}
-            }
 
-            throw new NotSupportedException($"Desired {formatEncoding} sample rate '{samplerate}' doesn't supported or disabled.");
+				// check allowed samplerates for PCM - for resampler
+				if (sampleRate.ContainsKey(WaveFormatEncoding.PCM))
+					sampleRatesToTry = sampleRate[WaveFormatEncoding.PCM]?.ToList();
+
+				if (dop || sampleRatesToTry == null || sampleRatesToTry.Count == 0)
+				{
+					i++;
+					continue;
+				}
+			}
+
+			if (raise)
+				throw new NotSupportedException($"Desired {formatEncoding} sample rate '{samplerate}' doesn't supported or disabled.");
+
+			return InternalWaveFormat;
         }
 
 		public WaveFormatExtensible InternalWaveFormat
@@ -475,7 +491,7 @@ namespace NAudio.Wave
 						// The MixFormat is more likely to be a WaveFormatExtensible.
 						//if (closestSampleRateFormat == null)
 						//{
-							InternalWaveFormat = GetFallbackFormat(waveProvider.WaveFormat);
+							InternalWaveFormat = GetFallbackFormat(waveProvider.WaveFormat, false, false);
 						//}
 						//else
 						//{
