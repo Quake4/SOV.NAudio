@@ -404,7 +404,7 @@ namespace NAudio.Wave
 										catch { }
 									}
 								// check other 48 => 44.1
-								desired = sampleRate[WaveFormatEncoding.PCM][0];
+								desired = sampleRate[WaveFormatEncoding.PCM].First();
 								if (!resamplerUsed && CheckAndSetSampleRate(desired, false, WaveFormatEncoding.PCM))
 								{
 									try
