@@ -201,10 +201,7 @@ namespace NAudio.Wave
             }
             finally
             {
-                if (resamplerDmoStream != null)
-                {
-                    resamplerDmoStream.Dispose();
-                }
+                resamplerDmoStream?.Dispose();
                 RaisePlaybackStopped(exception);
 
                 //if (PlayThreadDeleted != null)
