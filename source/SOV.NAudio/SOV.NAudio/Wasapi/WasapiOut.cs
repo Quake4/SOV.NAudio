@@ -366,14 +366,12 @@ namespace NAudio.Wave
 				}
 
 				// check allowed samplerates for PCM - for resampler
-				if (sampleRate.ContainsKey(WaveFormatEncoding.PCM))
+				if (sampleRate != null && sampleRate.ContainsKey(WaveFormatEncoding.PCM))
 					sampleRatesToTry = sampleRate[WaveFormatEncoding.PCM]?.ToList();
 
+				// skip if dop or no samplerates
 				if (dop || sampleRatesToTry == null || sampleRatesToTry.Count == 0)
-				{
 					i++;
-					continue;
-				}
 			}
 
 			if (raise)
