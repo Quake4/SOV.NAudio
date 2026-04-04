@@ -284,9 +284,10 @@ namespace NAudio.Wave
             return false;
         }
 
-        private WaveFormatExtensible GetFallbackFormat(WaveFormat source, bool dop = false, bool raise = true)
+        private WaveFormatExtensible GetFallbackFormat(WaveFormat source, bool dop = false)
         {
             var deviceChannels = audioClient.MixFormat.Channels; // almost certain to be stereo
+			var deviceSampleRate = audioClient.MixFormat.SampleRate;
 
 			// we are in exclusive mode
 			// First priority is to try the sample rate you provided.
@@ -330,7 +331,7 @@ namespace NAudio.Wave
 				sampleRatesToTryLower.Reverse();
 				sampleRatesToTry.AddRange(sampleRatesToTryLower);
 				// Last priority is to use the sample rate the device wants
-				//if (!sampleRatesToTry.Contains(deviceSampleRate)) sampleRatesToTry.Add(deviceSampleRate);
+				if (!sampleRatesToTry.Contains(deviceSampleRate)) sampleRatesToTry.Add(deviceSampleRate);
 
 				bitDepthsToTry.Add(source.BitsPerSample);
 				if (!bitDepthsToTry.Contains(32)) bitDepthsToTry.Add(32);
@@ -374,10 +375,7 @@ namespace NAudio.Wave
 					i++;
 			}
 
-			if (raise)
-				throw new NotSupportedException($"Desired {formatEncoding} sample rate '{samplerate}' doesn't supported or disabled.");
-
-			return InternalWaveFormat;
+			throw new NotSupportedException($"Desired {formatEncoding} sample rate '{samplerate}' doesn't supported or disabled.");
         }
 
 		public WaveFormatExtensible InternalWaveFormat
@@ -486,7 +484,7 @@ namespace NAudio.Wave
 						// The MixFormat is more likely to be a WaveFormatExtensible.
 						//if (closestSampleRateFormat == null)
 						//{
-							InternalWaveFormat = GetFallbackFormat(waveProvider.WaveFormat, false, false);
+							InternalWaveFormat = GetFallbackFormat(waveProvider.WaveFormat);
 						//}
 						//else
 						//{
