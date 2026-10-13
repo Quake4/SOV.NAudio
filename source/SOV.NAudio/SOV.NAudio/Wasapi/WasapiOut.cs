@@ -34,7 +34,6 @@ namespace NAudio.Wave
 		WaveFormatExtensible internalWaveFormat;
 		WasapiFrameConverter.FrameConverter frameConverter;
 		protected readonly IDictionary<WaveFormatEncoding, int[]> sampleRate;
-		protected volatile bool _start = false;
 
 		/// <summary>
 		/// Playback Stopped
@@ -139,7 +138,7 @@ namespace NAudio.Wave
                 // Create WaitHandle for sync
                 var waitHandles = new WaitHandle[] { frameEventWaitHandle };
 
-				_start = true;
+				var autostart = true;
 
 				while (playbackState != PlaybackState.Stopped)
 				{
@@ -161,22 +160,20 @@ namespace NAudio.Wave
 						if (numFramesAvailable > 10) // see https://naudio.codeplex.com/workitem/16363
 						{
 							if (FillBuffer(playbackProvider, numFramesAvailable))
-							{
 								// reached the end
 								break;
-							}
 						}
 					}
 
-					if (_start)
+					if (autostart)
 					{
 						audioClient.Start();
-						_start = false;
+						autostart = false;
 					}
 
 					// If using Event Sync, Wait for notification from AudioClient or Sleep half latency
 					if (isUsingEventSync)
-						WaitHandle.WaitAny(waitHandles, 3 * latencyMilliseconds, false);
+						WaitHandle.WaitAny(waitHandles, 2 * latencyMilliseconds, false);
 					else
 						Thread.Sleep(latencyMilliseconds / 2);
 				}
@@ -317,7 +314,7 @@ namespace NAudio.Wave
 				var sampleRatesToTryLower = new List<int>();
 				// And if we've not already got 44.1 and 48kHz in the list, let's try them too
 				var baseSampleRate = source.SampleRate % 44100 == 0 ? 44100 : 48000;
-				for (int i = 1; i < (1 << 4); i = i << 1)
+				for (int i = 1; i < (1 << 4); i <<= 1)
 				{
 					var sr = i * baseSampleRate;
 					if (sr < source.SampleRate)
@@ -407,8 +404,8 @@ namespace NAudio.Wave
                 }
                 else
                 {
-                    playbackState = PlaybackState.Playing;
-					_start = true;
+					playbackState = PlaybackState.Playing;
+					audioClient.Start();
 				}
             }
         }
