@@ -34,6 +34,7 @@ namespace NAudio.Wave
 		WaveFormatExtensible internalWaveFormat;
 		WasapiFrameConverter.FrameConverter frameConverter;
 		protected readonly IDictionary<WaveFormatEncoding, int[]> sampleRate;
+		protected volatile bool _start = false;
 
 		/// <summary>
 		/// Playback Stopped
@@ -133,56 +134,53 @@ namespace NAudio.Wave
                 bytesPerFrame = OutputWaveFormat.Channels * OutputWaveFormat.BitsPerSample / 8;
                 readBuffer = BufferHelpers.Ensure(readBuffer, bufferFrameCount * Math.Max(OutputWaveFormat.BlockAlign,
                     (sourceWaveFormat.Encoding == WaveFormatEncoding.DSD ? 2 : 1) * sourceWaveFormat.BlockAlign));
-                if (FillBuffer(playbackProvider, bufferFrameCount))
-                {
-                    // played a zero length stream - exit immediately
-                    return;
-                }
                 // to calculate buffer duration but does always seem to match latency
                 // var bufferDurationMilliseconds = (bufferFrameCount * 1000) /OutputWaveFormat.SampleRate;
                 // Create WaitHandle for sync
                 var waitHandles = new WaitHandle[] { frameEventWaitHandle };
 
-                audioClient.Start();
+				_start = true;
 
-                while (playbackState != PlaybackState.Stopped)
-                {
-                    // If using Event Sync, Wait for notification from AudioClient or Sleep half latency
-                    if (isUsingEventSync)
-                    {
-                        WaitHandle.WaitAny(waitHandles, 3 * latencyMilliseconds, false);
-                    }
-                    else
-                    {
-                        Thread.Sleep(latencyMilliseconds / 2);
-                    }
+				while (playbackState != PlaybackState.Stopped)
+				{
+					// If still playing
+					if (playbackState == PlaybackState.Playing)
+					{
+						// See how much buffer space is available.
+						int numFramesPadding;
+						if (isUsingEventSync)
+						{
+							// In exclusive mode, always ask the max = bufferFrameCount = audioClient.BufferSize
+							numFramesPadding = (shareMode == AudioClientShareMode.Shared) ? audioClient.CurrentPadding : 0;
+						}
+						else
+						{
+							numFramesPadding = audioClient.CurrentPadding;
+						}
+						int numFramesAvailable = bufferFrameCount - numFramesPadding;
+						if (numFramesAvailable > 10) // see https://naudio.codeplex.com/workitem/16363
+						{
+							if (FillBuffer(playbackProvider, numFramesAvailable))
+							{
+								// reached the end
+								break;
+							}
+						}
+					}
 
-                    // If still playing
-                    if (playbackState == PlaybackState.Playing)
-                    {
-                        // See how much buffer space is available.
-                        int numFramesPadding;
-                        if (isUsingEventSync)
-                        {
-                            // In exclusive mode, always ask the max = bufferFrameCount = audioClient.BufferSize
-                            numFramesPadding = (shareMode == AudioClientShareMode.Shared) ? audioClient.CurrentPadding : 0;
-                        }
-                        else
-                        {
-                            numFramesPadding = audioClient.CurrentPadding;
-                        }
-                        int numFramesAvailable = bufferFrameCount - numFramesPadding;
-                        if (numFramesAvailable > 10) // see https://naudio.codeplex.com/workitem/16363
-                        {
-                            if (FillBuffer(playbackProvider, numFramesAvailable))
-                            {
-                                // reached the end
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (playbackState == PlaybackState.Playing)
+					if (_start)
+					{
+						audioClient.Start();
+						_start = false;
+					}
+
+					// If using Event Sync, Wait for notification from AudioClient or Sleep half latency
+					if (isUsingEventSync)
+						WaitHandle.WaitAny(waitHandles, 3 * latencyMilliseconds, false);
+					else
+						Thread.Sleep(latencyMilliseconds / 2);
+				}
+				if (playbackState == PlaybackState.Playing)
                 {
                     // we got here by reaching the end of the input file, so
                     // let's make sure the last buffer has time to play
@@ -410,7 +408,8 @@ namespace NAudio.Wave
                 else
                 {
                     playbackState = PlaybackState.Playing;
-                }
+					_start = true;
+				}
             }
         }
 
@@ -435,7 +434,8 @@ namespace NAudio.Wave
             if (playbackState == PlaybackState.Playing)
             {
                 playbackState = PlaybackState.Paused;
-            }
+				audioClient.Stop();
+			}
         }
 
         /// <summary>
